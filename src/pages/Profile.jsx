@@ -1,57 +1,40 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient.js'
-import { useAuth } from '../hooks/useAuth.jsx'
+import { supabase } from '../lib/supabaseClient'
+import { T, C } from '../lib/schema'
+import { useAuth } from '../context/AuthContext'
+import { ErrorMsg } from '../components/Layout'
 
 export default function Profile() {
-  const { user, profile } = useAuth()
-  const [form, setForm] = useState({ first_name:'', last_name:'', username:'', birth_date:'', height_cm:'' })
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
+  const { user } = useAuth()
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+  const [ok, setOk] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (profile) {
-      setForm({
-        first_name: profile.first_name||'',
-        last_name: profile.last_name||'',
-        username: profile.username||'',
-        birth_date: profile.birth_date||'',
-        height_cm: profile.height_cm||''
-      })
-    }
-  }, [profile])
+    supabase.from(T.profiles).select('*').eq('id', user.id).maybeSingle().then(({ data, error }) => {
+      if (error) setError(error.message)
+      else setName(data?.[C.profileName] ?? '')
+      setLoading(false)
+    })
+  }, [user.id])
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!user) return
-    setLoading(true); setMsg('')
-    const { error } = await supabase.from('profiles').update({
-      first_name: form.first_name,
-      last_name: form.last_name,
-      username: form.username,
-      birth_date: form.birth_date || null,
-      height_cm: form.height_cm || null,
-      updated_at: new Date().toISOString()
-    }).eq('id', user.id)
-    setLoading(false)
-    setMsg(error ? error.message : 'Perfil actualizado')
+  const save = async (e) => {
+    e.preventDefault(); setError(''); setOk(false)
+    const { error } = await supabase.from(T.profiles).update({ [C.profileName]: name.trim() }).eq('id', user.id)
+    if (error) setError(error.message); else setOk(true)
   }
-
+  if (loading) return <p>Cargando…</p>
   return (
-    <div className="card p-3">
-      <h5>Perfil</h5>
-      {msg && <div className="alert alert-info py-2">{msg}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-6 mb-2"><label className="form-label">Nombre</label><input className="form-control" name="first_name" value={form.first_name} onChange={handleChange} required /></div>
-          <div className="col-md-6 mb-2"><label className="form-label">Apellido</label><input className="form-control" name="last_name" value={form.last_name} onChange={handleChange} required /></div>
-        </div>
-        <div className="mb-2"><label className="form-label">Nombre de usuario</label><input className="form-control" name="username" value={form.username} onChange={handleChange} required /></div>
-        <div className="mb-2"><label className="form-label">Fecha de nacimiento (opcional)</label><input type="date" className="form-control" name="birth_date" value={form.birth_date} onChange={handleChange} /></div>
-        <div className="mb-3"><label className="form-label">Altura cm (opcional)</label><input type="number" step="0.01" min="0" className="form-control" name="height_cm" value={form.height_cm} onChange={handleChange} /></div>
-        <button className="btn btn-primary" disabled={loading}>{loading?'Guardando...':'Guardar'}</button>
-      </form>
-    </div>
+    <form onSubmit={save} style={{ maxWidth: 420 }}>
+      <h1 className="h4 mb-3">Perfil</h1>
+      <ErrorMsg error={error} />
+      {ok && <div className="alert alert-success py-2">Perfil guardado.</div>}
+      <label className="form-label">Email</label>
+      <input className="form-control mb-3" value={user.email} disabled />
+      <label className="form-label">Nombre</label>
+      <input className="form-control mb-3" value={name} onChange={(e) => setName(e.target.value)} />
+      <button className="btn btn-primary">Guardar cambios</button>
+    </form>
   )
 }

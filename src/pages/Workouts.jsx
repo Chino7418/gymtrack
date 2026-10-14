@@ -1,52 +1,45 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient.js'
-import { useAuth } from '../hooks/useAuth.jsx'
 import { Link } from 'react-router-dom'
+import dayjs from 'dayjs'
+import { supabase } from '../lib/supabaseClient'
+import { T } from '../lib/schema'
+import { ErrorMsg } from '../components/Layout'
 
 export default function Workouts() {
-  const { user } = useAuth()
   const [list, setList] = useState([])
-  const [date, setDate] = useState('')
-
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
   const load = async () => {
-    if (!user) return
-    let q = supabase.from('workouts').select('id,workout_date,name,notes,created_at').eq('user_id',user.id).order('workout_date',{ascending:false})
-    if (date) q = q.eq('workout_date', date)
-    const { data } = await q
-    setList(data||[])
+    const { data, error } = await supabase.from(T.workouts).select('*').order('workout_date', { ascending: false })
+    if (error) setError(error.message); else setList(data)
+    setLoading(false)
   }
-
-  useEffect(()=>{ load() },[user,date])
-
+  useEffect(() => { load() }, [])
   const del = async (id) => {
-    if (!confirm('Eliminar entrenamiento?')) return
-    await supabase.from('workouts').delete().eq('id',id).eq('user_id',user.id)
-    load()
+    if (!confirm('¿Borrar este entrenamiento?')) return
+    const { error } = await supabase.from(T.workouts).delete().eq('id', id)
+    if (error) setError(error.message); else load()
   }
-
   return (
-    <div className="card p-3">
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <h5>Entrenamientos</h5>
-        <Link className="btn btn-primary btn-sm" to="/workouts/new">Nuevo</Link>
+    <>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1 className="h4 m-0">Entrenamientos</h1>
+        <Link to="/workouts/new" className="btn btn-primary">Nuevo entrenamiento</Link>
       </div>
-      <div className="mb-2"><input type="date" className="form-control" value={date} onChange={e=>setDate(e.target.value)} /></div>
-      <div className="list-group">
-        {list.map(w=>(
-          <div key={w.id} className="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
-            <div>
-              <strong>{w.workout_date}</strong> {w.name && <span>· {w.name}</span>}
-              {w.notes && <div className="small text-muted">{w.notes}</div>}
-            </div>
-            <div className="btn-group btn-group-sm">
-              <Link className="btn btn-outline-light" to={`/workouts/${w.id}`}>Ver</Link>
-              <Link className="btn btn-outline-light" to={`/workouts/${w.id}/edit`}>Editar</Link>
-              <button className="btn btn-outline-danger" onClick={()=>del(w.id)}>Eliminar</button>
-            </div>
-          </div>
-        ))}
-        {list.length===0 && <div className="text-muted">Sin entrenamientos</div>}
-      </div>
-    </div>
+      <ErrorMsg error={error} />
+      {loading ? <p>Cargando…</p> : list.length === 0 ? <p className="text-muted">Todavía no registraste entrenamientos.</p> : (
+        <ul className="list-group">
+          {list.map((w) => (
+            <li key={w.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <span><strong>{w.name}</strong> <small className="text-muted ms-2">{dayjs(w.workout_date).format('DD/MM/YYYY')}</small></span>
+              <span className="btn-group btn-group-sm">
+                <Link className="btn btn-outline-primary" to={`/workouts/${w.id}`}>Editar</Link>
+                <button className="btn btn-outline-danger" onClick={() => del(w.id)}>Borrar</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   )
 }
