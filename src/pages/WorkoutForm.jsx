@@ -51,14 +51,14 @@ export default function WorkoutForm() {
     for (const [i, it] of items.entries()) {
       if (!it.exercise_id) return setError(`Elegí el ejercicio #${i + 1}`)
       for (const s of it.sets) {
-        if (s.reps === '' || Number(s.reps) < 0 || (s.weight_kg !== '' && Number(s.weight_kg) < 0))
-          return setError(`Revisá las series del ejercicio #${i + 1}: repeticiones obligatorias y sin números negativos`)
+        if (s.reps === '' || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
+          return setError(`Revisá las series del ejercicio #${i + 1}: peso y repeticiones son obligatorios (mínimo 1 repetición, sin negativos)`)
       }
     }
     const p_exercises = items.map((it, i) => ({
       exercise_id: it.exercise_id, position: i + 1, notes: it.notes || null,
       sets: it.sets.map((s, j) => ({
-        set_number: j + 1, weight_kg: s.weight_kg === '' ? null : Number(s.weight_kg),
+        set_number: j + 1, weight_kg: Number(s.weight_kg),
         reps: Number(s.reps), notes: s.notes || null,
       })),
     }))
