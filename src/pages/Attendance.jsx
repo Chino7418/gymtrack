@@ -47,12 +47,7 @@ export default function Attendance() {
   const cancel = () => { setEditId(null); setForm({ attendance_date: dayjs().format('YYYY-MM-DD'), check_in_time:'', notes:'', workout_id:null }) }
 
   const totalMonth = list.length
-  const totalYear = (await (async()=>{
-    const startY = dayjs().startOf('year').format('YYYY-MM-DD')
-    const endY = dayjs().endOf('year').format('YYYY-MM-DD')
-    const {count} = await supabase.from('gym_attendances').select('*',{count:'exact',head:true}).eq('user_id',user.id).gte('attendance_date',startY).lte('attendance_date',endY)
-    return count||0
-  })()) // quick
+  const totalYear = 0
 
   return (
     <div className="row g-3">
