@@ -30,6 +30,7 @@ export default function Dashboard() {
       current: w.data?.[0] ?? null,
       previous: w.data?.[1] ?? null,
       goal: p.data?.goal_weight_kg ?? null,
+      name: p.data?.first_name ?? '',
       month: m.count ?? 0,
       total: tot.count ?? 0,
       lastWorkout: last.data?.[0] ?? null,
@@ -55,7 +56,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <h1 className="h4 mb-3">Inicio</h1>
+      <h1 className="h4 mb-3">{data.name ? `Hola, ${data.name}` : 'Inicio'}</h1>
       <ErrorMsg error={error} />
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-4">

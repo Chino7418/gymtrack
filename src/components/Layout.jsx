@@ -14,7 +14,7 @@ function Layout() {
     ['/weight', 'Peso'], ['/profile', 'Perfil'],
   ]
   return (
-    <>
+    <div className="d-flex flex-column min-vh-100">
       <nav className="navbar navbar-expand-md navbar-dark bg-dark">
         <div className="container">
           <span className="navbar-brand fw-bold">GymTrack</span>
@@ -33,8 +33,11 @@ function Layout() {
           </div>
         </div>
       </nav>
-      <main className="container py-4"><Outlet /></main>
-    </>
+      <main className="container py-4 flex-grow-1"><Outlet /></main>
+      <footer className="border-top py-3 text-center small text-muted">
+        GymTrack · {new Date().getFullYear()} · Tus entrenamientos, en un solo lugar
+      </footer>
+    </div>
   )
 }
 
