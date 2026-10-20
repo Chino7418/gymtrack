@@ -8,6 +8,10 @@ import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
+ChartJS.defaults.color = '#c9cedb'
+ChartJS.defaults.borderColor = 'rgba(255,255,255,0.10)'
+ChartJS.defaults.color = '#c9cedb'
+ChartJS.defaults.borderColor = 'rgba(255,255,255,0.10)'
 
 export default function Weight() {
   const { user } = useAuth()
@@ -37,7 +41,7 @@ export default function Weight() {
 
   const data = {
     labels: rows.map((r) => dayjs(r[C.weightDate]).format('DD/MM')),
-    datasets: [{ label: 'Peso (kg)', data: rows.map((r) => r[C.weightValue]), borderColor: '#0d6efd', tension: 0.25 }],
+    datasets: [{ label: 'Peso (kg)', data: rows.map((r) => r[C.weightValue]), borderColor: '#7c9cff', backgroundColor: '#7c9cff', tension: 0.25 }],
   }
   return (
     <>

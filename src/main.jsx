@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import './styles.css'
+import './styles.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import App from './App.jsx'
 
