@@ -100,7 +100,7 @@ export default function Dashboard() {
           <div className="card h-100"><div className="card-body">
             <h2 className="h6 text-muted">Días asistidos</h2>
             <div className="display-5 fw-bold">{data.month}</div>
-            <div className="small text-muted text-capitalize">en {dayjs().format('MMMM')} · {data.total} en total</div>
+            <div className="small text-muted">en {dayjs().format('MMMM')} · {data.total} en total</div>
             <Link to="/attendance" className="btn btn-sm btn-outline-primary mt-3">Ver calendario</Link>
           </div></div>
         </div>
