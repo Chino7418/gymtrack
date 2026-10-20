@@ -10,7 +10,7 @@ export function Protected() {
 function Layout() {
   const { signOut } = useAuth()
   const links = [
-    ['/', 'Entrenamientos'], ['/exercises', 'Ejercicios'], ['/attendance', 'Asistencia'],
+    ['/', 'Inicio'], ['/workouts', 'Entrenamientos'], ['/exercises', 'Ejercicios'], ['/attendance', 'Asistencia'],
     ['/weight', 'Peso'], ['/profile', 'Perfil'],
   ]
   return (

@@ -69,7 +69,7 @@ export default function WorkoutForm() {
     })
     setSaving(false)
     if (error) return setError(error.message)
-    nav('/')
+    nav('/workouts')
   }
 
   if (loading) return <p>Cargando…</p>
@@ -113,7 +113,7 @@ export default function WorkoutForm() {
       <div className="d-flex gap-2 flex-wrap">
         <button type="button" className="btn btn-outline-primary" onClick={() => setItems([...items, { exercise_id: '', notes: '', sets: [emptySet()] }])}>Agregar ejercicio</button>
         <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/')}>Cancelar</button>
+        <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/workouts')}>Cancelar</button>
       </div>
     </form>
   )
