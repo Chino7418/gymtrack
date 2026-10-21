@@ -1,0 +1,18 @@
+/* Dashboard compacto: pensado primero para celular */
+.stat { display: block; padding: 0.7rem 0.75rem; text-decoration: none; color: inherit; transition: border-color 0.15s; }
+.stat:hover { color: inherit; border-color: rgba(255, 255, 255, 0.28); }
+button.stat { font: inherit; text-align: left; width: 100%; }
+.stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); }
+.stat-value { font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; }
+.stat-value small { font-size: 0.72rem; font-weight: 500; margin-left: 0.15rem; color: var(--bs-secondary-color); }
+.stat-sub { font-size: 0.72rem; color: var(--bs-secondary-color); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.timer-digits { font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+
+@media (min-width: 768px) {
+  .stat { padding: 1rem 1.25rem; }
+  .stat-label { font-size: 0.78rem; }
+  .stat-value { font-size: 2.6rem; }
+  .stat-value small { font-size: 1rem; }
+  .stat-sub { font-size: 0.85rem; }
+  .timer-digits { font-size: 3.6rem; }
+}

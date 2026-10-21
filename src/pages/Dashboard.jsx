@@ -6,6 +6,7 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import RestTimer from '../components/RestTimer'
+import './dashboard.css'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -38,6 +39,7 @@ export default function Dashboard() {
   }
   useEffect(() => { load() }, [])
 
+  const openGoal = () => { setGoalInput(data.goal != null ? String(data.goal) : ''); setEditing(true) }
   const saveGoal = async (e) => {
     e.preventDefault(); setError('')
     const n = Number(goalInput)
@@ -54,70 +56,70 @@ export default function Dashboard() {
   const diff = cur != null && goal != null ? goal - cur : null
   const change = cur != null && prev != null ? cur - prev : null
 
+  const pesoSub = cur == null ? 'Registrar'
+    : `${dayjs(data.current[C.weightDate]).format('DD/MM')}${change ? ` · ${change > 0 ? '+' : ''}${change.toFixed(1)}` : ''}`
+  const objSub = goal == null ? 'Definir'
+    : diff == null ? 'Cambiar'
+    : Math.abs(diff) < 0.05 ? '¡Logrado!' : `Faltan ${Math.abs(diff).toFixed(1)} kg`
+
   return (
     <>
-      <h1 className="h4 mb-3">{data.name ? `Hola, ${data.name}` : 'Inicio'}</h1>
+      <h1 className="h4 mb-2">{data.name ? `Hola, ${data.name}` : 'Inicio'}</h1>
       <ErrorMsg error={error} />
-      <div className="row g-3 mb-3">
-        <div className="col-12 col-md-4">
-          <div className="card h-100"><div className="card-body">
-            <h2 className="h6 text-muted">Peso actual</h2>
-            {cur != null ? (
-              <>
-                <div className="display-5 fw-bold">{cur} <small className="fs-6">kg</small></div>
-                <div className="small text-muted">{dayjs(data.current[C.weightDate]).format('DD/MM/YYYY')}
-                  {change != null && change !== 0 && <> · {change > 0 ? '+' : ''}{change.toFixed(1)} kg vs. anterior</>}
-                </div>
-              </>
-            ) : <p className="text-muted mb-0">Todavía no registraste tu peso.</p>}
-            <Link to="/weight" className="btn btn-sm btn-outline-primary mt-3">Registrar peso</Link>
-          </div></div>
-        </div>
 
-        <div className="col-12 col-md-4">
-          <div className="card h-100"><div className="card-body">
-            <h2 className="h6 text-muted">Objetivo</h2>
-            {editing || goal == null ? (
-              <form onSubmit={saveGoal} className="d-flex gap-2">
-                <input type="number" step="0.1" min="0" className="form-control" placeholder="Peso objetivo (kg)"
-                  value={goalInput} onChange={(e) => setGoalInput(e.target.value)} />
-                <button className="btn btn-primary">Guardar</button>
-              </form>
-            ) : (
-              <>
-                <div className="display-5 fw-bold">{goal} <small className="fs-6">kg</small></div>
-                {diff != null && (
-                  <div className="small text-muted">
-                    {Math.abs(diff) < 0.05 ? '¡Objetivo alcanzado!' : `Estás a ${Math.abs(diff).toFixed(1)} kg del objetivo`}
-                  </div>
-                )}
-                <button className="btn btn-sm btn-outline-secondary mt-3" onClick={() => { setGoalInput(String(goal)); setEditing(true) }}>Cambiar objetivo</button>
-              </>
-            )}
-          </div></div>
+      <div className="row g-2 g-md-3 mb-2 mb-md-3">
+        <div className="col-4">
+          <Link to="/weight" className="card stat h-100">
+            <div className="stat-label">Peso</div>
+            <div className="stat-value">{cur ?? '—'}{cur != null && <small>kg</small>}</div>
+            <div className="stat-sub">{pesoSub}</div>
+          </Link>
         </div>
-
-        <div className="col-12 col-md-4">
-          <div className="card h-100"><div className="card-body">
-            <h2 className="h6 text-muted">Días asistidos</h2>
-            <div className="display-5 fw-bold">{data.month}</div>
-            <div className="small text-muted">en {dayjs().format('MMMM')} · {data.total} en total</div>
-            <Link to="/attendance" className="btn btn-sm btn-outline-primary mt-3">Ver calendario</Link>
-          </div></div>
+        <div className="col-4">
+          <button type="button" className="card stat h-100" onClick={openGoal}>
+            <div className="stat-label">Objetivo</div>
+            <div className="stat-value">{goal ?? '—'}{goal != null && <small>kg</small>}</div>
+            <div className="stat-sub">{objSub}</div>
+          </button>
+        </div>
+        <div className="col-4">
+          <Link to="/attendance" className="card stat h-100">
+            <div className="stat-label">Asistencia</div>
+            <div className="stat-value">{data.month}<small>días</small></div>
+            <div className="stat-sub">{dayjs().format('MMM')} · {data.total} total</div>
+          </Link>
         </div>
       </div>
 
-      <div className="row g-3">
+      {editing && (
+        <form onSubmit={saveGoal} className="card card-body p-3 mb-2 mb-md-3">
+          <label className="stat-label mb-1" htmlFor="goal">Peso objetivo (kg)</label>
+          <div className="d-flex gap-2">
+            <input id="goal" autoFocus type="number" step="0.1" min="0" className="form-control" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} />
+            <button className="btn btn-primary">Guardar</button>
+            <button type="button" className="btn btn-outline-secondary" onClick={() => setEditing(false)}>Cancelar</button>
+          </div>
+        </form>
+      )}
+
+      <div className="row g-2 g-md-3">
         <div className="col-12 col-lg-7"><RestTimer /></div>
         <div className="col-12 col-lg-5">
-          <div className="card h-100"><div className="card-body">
-            <h2 className="h6 text-muted">Último entrenamiento</h2>
-            {data.lastWorkout ? (
-              <p className="mb-3"><strong>{data.lastWorkout.name}</strong><br />
-                <span className="text-muted small">{dayjs(data.lastWorkout.workout_date).format('DD/MM/YYYY')}</span></p>
-            ) : <p className="text-muted">Todavía no registraste entrenamientos.</p>}
-            <Link to="/workouts/new" className="btn btn-primary">Nuevo entrenamiento</Link>
-          </div></div>
+          <div className="card h-100">
+            <div className="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div className="min-w-0">
+                <div className="stat-label">Último entrenamiento</div>
+                {data.lastWorkout ? (
+                  <div className="text-truncate"><strong>{data.lastWorkout.name}</strong>
+                    <span className="text-muted small ms-2">{dayjs(data.lastWorkout.workout_date).format('DD/MM')}</span></div>
+                ) : <div className="text-muted small">Todavía no registraste ninguno</div>}
+              </div>
+              <Link to="/workouts/new" className="btn btn-primary text-nowrap">
+                <span className="d-none d-sm-inline">Nuevo entrenamiento</span>
+                <span className="d-sm-none">+ Nuevo</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>
