@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,6 +10,8 @@ export function Protected() {
 
 function Layout() {
   const { signOut } = useAuth()
+  const [open, setOpen] = useState(false)
+  const close = () => setOpen(false)
   const links = [
     ['/', 'Inicio'], ['/workouts', 'Entrenamientos'], ['/exercises', 'Ejercicios'], ['/attendance', 'Asistencia'],
     ['/weight', 'Peso'], ['/profile', 'Perfil'],
@@ -18,14 +21,14 @@ function Layout() {
       <nav className="navbar navbar-expand-md navbar-dark bg-dark">
         <div className="container">
           <span className="navbar-brand fw-bold">GymTrack</span>
-          <button className="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="Menú">
+          <button className="navbar-toggler" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="nav" aria-label="Menú">
             <span className="navbar-toggler-icon" />
           </button>
-          <div className="collapse navbar-collapse" id="nav">
+          <div className={`collapse navbar-collapse ${open ? 'show' : ''}`} id="nav">
             <ul className="navbar-nav me-auto">
               {links.map(([to, label]) => (
                 <li className="nav-item" key={to}>
-                  <NavLink end={to === '/'} to={to} className="nav-link">{label}</NavLink>
+                  <NavLink end={to === '/'} to={to} className="nav-link" onClick={close}>{label}</NavLink>
                 </li>
               ))}
             </ul>

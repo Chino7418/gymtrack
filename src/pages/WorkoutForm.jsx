@@ -4,12 +4,15 @@ import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
 import { ErrorMsg } from '../components/Layout'
+import ExercisePicker, { norm } from '../components/ExercisePicker'
+import { useAuth } from '../context/AuthContext'
 
 const emptySet = () => ({ weight_kg: '', reps: '', notes: '' })
 
 export default function WorkoutForm() {
   const { id } = useParams()
   const nav = useNavigate()
+  const { user } = useAuth()
   const [catalog, setCatalog] = useState([])
   const [name, setName] = useState('')
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
@@ -19,6 +22,7 @@ export default function WorkoutForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [picking, setPicking] = useState(!id)
 
   useEffect(() => {
     (async () => {
@@ -43,6 +47,52 @@ export default function WorkoutForm() {
 
   const upd = (i, patch) => setItems(items.map((x, k) => (k === i ? { ...x, ...patch } : x)))
   const updSet = (i, j, patch) => upd(i, { sets: items[i].sets.map((s, k) => (k === j ? { ...s, ...patch } : s)) })
+  // Nueva serie = copia de la anterior (peso y reps), para cargar más rápido
+  const addSet = (i) => {
+    const last = items[i].sets.at(-1)
+    upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '' } : emptySet()] })
+  }
+
+  // Del catálogo wger: si no está en mis ejercicios, lo crea
+  const ensureExercise = async (x) => {
+    if (catalog.some((c) => c.id === x.id)) return x
+    const found = catalog.find((c) => norm(c.name) === norm(x.name))
+    if (found) return found
+    const { data, error } = await supabase.from(T.exercises)
+      .insert({ name: x.name, muscle_group: x.muscle_group, description: x.description, user_id: user.id })
+      .select().single()
+    if (error) { setError(error.message); return null }
+    setCatalog((c) => [...c, data])
+    return data
+  }
+
+  // Series de la última vez que se hizo el ejercicio (fuera de este entrenamiento)
+  const lastSets = async (exerciseId) => {
+    let q = supabase.from(T.workouts)
+      .select(`workout_date, ${T.workoutExercises}!inner(exercise_id, ${T.workoutSets}(*))`)
+      .eq(`${T.workoutExercises}.exercise_id`, exerciseId)
+      .order('workout_date', { ascending: false }).limit(1)
+    if (id) q = q.neq('id', id)
+    const { data } = await q
+    const we = data?.[0]?.[T.workoutExercises]?.[0]
+    if (!we) return null
+    return {
+      date: data[0].workout_date,
+      sets: [...we[T.workoutSets]].sort((a, b) => a.set_number - b.set_number)
+        .map((s) => ({ weight_kg: s.weight_kg, reps: s.reps, notes: '' })),
+    }
+  }
+
+  const addExercise = async (x) => {
+    setError('')
+    const ex = await ensureExercise(x)
+    if (!ex) return
+    const prev = await lastSets(ex.id)
+    setItems((list) => [...list, { exercise_id: ex.id, notes: '', sets: prev?.sets.length ? prev.sets : [emptySet()], prev }])
+    setPicking(false)
+  }
+  const exName = (exId) => catalog.find((c) => c.id === exId)?.[C.exerciseName] ?? 'Ejercicio'
+  const resumen = (sets) => sets.map((s) => `${Number(s.weight_kg)}×${s.reps}`).join(' · ')
 
   const save = async (e) => {
     e.preventDefault(); setError('')
@@ -84,17 +134,15 @@ export default function WorkoutForm() {
         <div className="col-12 form-check ms-2"><input id="att" type="checkbox" className="form-check-input" checked={attend} onChange={(e) => setAttend(e.target.checked)} /><label htmlFor="att" className="form-check-label">Registrar asistencia ese día</label></div>
       </div>
 
-      {catalog.length === 0 && <div className="alert alert-warning py-2">Primero cargá ejercicios en la sección Ejercicios.</div>}
-
       {items.map((it, i) => (
         <div className="card mb-3" key={i}>
           <div className="card-body">
-            <div className="d-flex gap-2 mb-2">
-              <select className="form-select" value={it.exercise_id} onChange={(e) => upd(i, { exercise_id: e.target.value })}>
-                <option value="">Elegir ejercicio…</option>
-                {catalog.map((c) => <option key={c.id} value={c.id}>{c[C.exerciseName]}</option>)}
-              </select>
-              <button type="button" className="btn btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))}>Quitar</button>
+            <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <div className="min-w-0">
+                <strong className="d-block text-truncate">{i + 1}. {exName(it.exercise_id)}</strong>
+                {it.prev && <small className="text-muted">Última vez ({dayjs(it.prev.date).format('DD/MM')}): {resumen(it.prev.sets)}</small>}
+              </div>
+              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))}>Quitar</button>
             </div>
             {it.sets.map((s, j) => (
               <div className="row g-2 mb-2 align-items-center" key={j}>
@@ -105,13 +153,15 @@ export default function WorkoutForm() {
                 <div className="col-3 col-md-1"><button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button></div>
               </div>
             ))}
-            <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => upd(i, { sets: [...it.sets, emptySet()] })}>Agregar serie</button>
+            <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => addSet(i)}>Agregar serie</button>
           </div>
         </div>
       ))}
 
+      {picking && <ExercisePicker mine={catalog} onPick={addExercise} includeMine />}
+
       <div className="d-flex gap-2 flex-wrap">
-        <button type="button" className="btn btn-outline-primary" onClick={() => setItems([...items, { exercise_id: '', notes: '', sets: [emptySet()] }])}>Agregar ejercicio</button>
+        <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} onClick={() => setPicking(!picking)}>{picking ? 'Cerrar buscador' : 'Agregar ejercicio'}</button>
         <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
         <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/workouts')}>Cancelar</button>
       </div>

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
+import ExercisePicker from '../components/ExercisePicker'
 
 const GRUPOS = ['Pecho', 'Espalda', 'Hombros', 'Biceps', 'Triceps', 'Piernas', 'Gluteos', 'Abdomen', 'Otro']
 const VACIO = { id: null, name: '', muscle_group: '', description: '' }
@@ -11,6 +12,7 @@ export default function Exercises() {
   const { user } = useAuth()
   const [list, setList] = useState([])
   const [form, setForm] = useState(VACIO)
+  const [mode, setMode] = useState(null) // null | 'catalog' | 'manual'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -30,7 +32,14 @@ export default function Exercises() {
       ? await supabase.from(T.exercises).update({ ...row, updated_at: new Date().toISOString() }).eq('id', form.id)
       : await supabase.from(T.exercises).insert({ ...row, user_id: user.id })
     if (error) return setError(error.message)
-    setForm(VACIO); load()
+    setForm(VACIO); setMode(null); load()
+  }
+  const importar = async (x) => {
+    setError('')
+    const { error } = await supabase.from(T.exercises)
+      .insert({ name: x.name, muscle_group: x.muscle_group, description: x.description, user_id: user.id })
+    if (error) return setError(error.message)
+    load()
   }
   const del = async (id) => {
     if (!confirm('¿Borrar este ejercicio?')) return
@@ -38,32 +47,48 @@ export default function Exercises() {
     if (error) setError(error.code === '23503' ? 'No se puede borrar: el ejercicio se usa en algún entrenamiento' : error.message)
     else load()
   }
+  const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '' }); setMode('manual') }
+  const toggle = (m) => { setForm(VACIO); setMode(mode === m ? null : m) }
+
 
   return (
     <>
       <h1 className="h4 mb-3">Ejercicios</h1>
       <ErrorMsg error={error} />
-      <form onSubmit={save} className="row g-2 mb-4">
-        <div className="col-12 col-md-4"><input className="form-control" placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-        <div className="col-12 col-md-3">
-          <select className="form-select" value={form.muscle_group} onChange={(e) => setForm({ ...form, muscle_group: e.target.value })}>
-            <option value="">Grupo muscular…</option>
-            {GRUPOS.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
-        </div>
-        <div className="col-12 col-md-5"><input className="form-control" placeholder="Descripción (opcional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-        <div className="col-12 d-flex gap-2">
-          <button className="btn btn-primary">{form.id ? 'Guardar cambios' : 'Agregar ejercicio'}</button>
-          {form.id && <button type="button" className="btn btn-outline-secondary" onClick={() => setForm(VACIO)}>Cancelar</button>}
-        </div>
-      </form>
+      <div className="d-flex gap-2 mb-3">
+        <button className={`btn ${mode === 'catalog' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => toggle('catalog')}>Buscar en catálogo</button>
+        <button className={`btn ${mode === 'manual' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => toggle('manual')}>Crear manual</button>
+      </div>
+
+      {mode === 'catalog' && <ExercisePicker mine={list} onPick={importar} markAdded />}
+
+      {mode === 'manual' && (
+        <form onSubmit={save} className="card card-body p-3 mb-4">
+          <div className="row g-2">
+            <div className="col-12 col-md-4"><input className="form-control" placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div className="col-12 col-md-3">
+              <select className="form-select" value={form.muscle_group} onChange={(e) => setForm({ ...form, muscle_group: e.target.value })}>
+                <option value="">Grupo muscular…</option>
+                {GRUPOS.map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div className="col-12 col-md-5"><input className="form-control" placeholder="Descripción (opcional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="col-12 d-flex gap-2">
+              <button className="btn btn-primary">{form.id ? 'Guardar cambios' : 'Agregar ejercicio'}</button>
+              <button type="button" className="btn btn-outline-secondary" onClick={() => toggle('manual')}>Cancelar</button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      <h2 className="h6 stat-label mb-2">Mis ejercicios ({list.length})</h2>
       {loading ? <p>Cargando…</p> : list.length === 0 ? <p className="text-muted">Todavía no cargaste ejercicios.</p> : (
         <ul className="list-group">
           {list.map((x) => (
-            <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center">
-              <span>{x.name} <small className="text-muted ms-2">{x.muscle_group}</small></span>
+            <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
+              <span className="min-w-0 text-truncate">{x.name} <small className="text-muted ms-2">{x.muscle_group}</small></span>
               <span className="btn-group btn-group-sm">
-                <button className="btn btn-outline-primary" onClick={() => setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '' })}>Editar</button>
+                <button className="btn btn-outline-primary" onClick={() => edit(x)}>Editar</button>
                 <button className="btn btn-outline-danger" onClick={() => del(x.id)}>Borrar</button>
               </span>
             </li>

@@ -7,12 +7,30 @@ const fmt = (s) => {
   return `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`
 }
 
+// El estado se guarda en localStorage para que el descanso siga corriendo al cambiar de pantalla
+const KEY = 'gymtrack.restTimer'
+const restore = () => {
+  let s = null
+  try { s = JSON.parse(localStorage.getItem(KEY)) } catch { /* sin storage */ }
+  if (!s) return { total: 90, left: 90, running: false, done: false, endAt: 0 }
+  if (s.running) {
+    const rem = (s.endAt - Date.now()) / 1000
+    return rem > 0 ? { ...s, left: rem } : { ...s, left: 0, running: false, done: true }
+  }
+  return s
+}
+
 export default function RestTimer() {
-  const [total, setTotal] = useState(90)
-  const [left, setLeft] = useState(90)
-  const [running, setRunning] = useState(false)
-  const [done, setDone] = useState(false)
-  const endRef = useRef(0)
+  const [init] = useState(restore)
+  const [total, setTotal] = useState(init.total)
+  const [left, setLeft] = useState(init.left)
+  const [running, setRunning] = useState(init.running)
+  const [done, setDone] = useState(init.done)
+  const endRef = useRef(init.endAt)
+
+  useEffect(() => {
+    try { localStorage.setItem(KEY, JSON.stringify({ total, left, running, done, endAt: endRef.current })) } catch { /* sin storage */ }
+  }, [total, running, done, running ? 0 : left])
 
   useEffect(() => {
     if (!running) return
