@@ -34,6 +34,7 @@ export default function WorkoutForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [picking, setPicking] = useState(!id)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -42,7 +43,7 @@ export default function WorkoutForm() {
       if (id) {
         const { data, error } = await supabase.from(T.workouts)
           .select(`*, ${T.workoutExercises}(*, ${T.workoutSets}(*))`).eq('id', id).single()
-        if (error) setError(error.message)
+        if (error) setNotFound(true)
         else {
           setName(data.name); setDate(data.workout_date); setNotes(data.notes ?? '')
           setItems([...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => {
@@ -137,9 +138,15 @@ export default function WorkoutForm() {
       })),
     }))
     setSaving(true)
+    // La función save_workout inserta la asistencia sin chequear duplicados: solo se pide si ese día no tiene
+    let record = attend
+    if (record) {
+      const { count } = await supabase.from(T.attendances).select('id', { count: 'exact', head: true }).eq('attendance_date', date)
+      record = !count
+    }
     const { error } = await supabase.rpc('save_workout', {
       p_workout_date: date, p_name: name.trim(), p_notes: notes || null,
-      p_exercises, p_workout_id: id ?? null, p_attendance: { record: attend },
+      p_exercises, p_workout_id: id ?? null, p_attendance: { record },
     })
     setSaving(false)
     if (error) return setError(error.message)
@@ -147,6 +154,13 @@ export default function WorkoutForm() {
   }
 
   if (loading) return <p role="status">Cargando…</p>
+  if (notFound) return (
+    <>
+      <h1 className="h4 mb-3">Entrenamiento no encontrado</h1>
+      <p className="text-muted">Puede que se haya borrado o que el enlace esté mal.</p>
+      <button type="button" className="btn btn-primary" onClick={() => nav('/workouts')}>Ver mis entrenamientos</button>
+    </>
+  )
   return (
     <form onSubmit={save}>
       <h1 className="h4 mb-3">{id ? 'Editar entrenamiento' : 'Nuevo entrenamiento'}</h1>

@@ -29,6 +29,8 @@ export default function Exercises() {
     e.preventDefault(); setError('')
     if (!form.name.trim()) return setError('El nombre es obligatorio')
     if (!form.muscle_group) return setError('Elegí un grupo muscular')
+    if (list.some((x) => x.id !== form.id && x.name.trim().toLowerCase() === form.name.trim().toLowerCase()))
+      return setError('Ya tenés un ejercicio con ese nombre')
     const row = { name: form.name.trim(), muscle_group: form.muscle_group, description: form.description.trim() || null }
     const { error } = form.id
       ? await supabase.from(T.exercises).update({ ...row, updated_at: new Date().toISOString() }).eq('id', form.id)

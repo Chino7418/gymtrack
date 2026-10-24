@@ -36,7 +36,8 @@ export default function Weight() {
   const add = async (e) => {
     e.preventDefault(); setError('')
     const n = Number(value)
-    if (!(n > 0)) return setError('Ingresá un peso mayor a 0')
+    if (!(n > 0 && n < 500)) return setError('Ingresá un peso entre 1 y 499 kg')
+    if (dayjs(date).isAfter(dayjs(), 'day')) return setError('La fecha no puede ser futura')
     const { error } = await supabase.from(T.weights).insert({ user_id: user.id, [C.weightValue]: n, [C.weightDate]: date })
     if (error) return setError(error.message)
     setValue(''); load()
@@ -58,7 +59,7 @@ export default function Weight() {
       <ErrorMsg error={error} />
       <form onSubmit={add} className="row g-2 mb-4">
         <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-value">Peso (kg)</label><input id="w-value" type="number" inputMode="decimal" step="any" min="0" className="form-control" value={value} onChange={(e) => setValue(e.target.value)} /></div>
-        <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-date">Fecha</label><input id="w-date" type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+        <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-date">Fecha</label><input id="w-date" type="date" max={dayjs().format('YYYY-MM-DD')} className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
         <div className="col-12 col-md-2 d-flex align-items-end"><button className="btn btn-primary w-100">Registrar</button></div>
       </form>
       {rows.length === 0 ? <p className="text-muted">Todavía no registraste tu peso.</p> : (

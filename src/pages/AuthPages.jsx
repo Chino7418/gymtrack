@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg, InfoMsg } from '../components/Layout'
 import PasswordInput from '../components/PasswordInput'
 import { traducir } from '../lib/errores'
 
-function Shell({ title, children }) {
+function Shell({ title, children, guest = true }) {
+  const { session } = useAuth()
+  if (guest && session) return <Navigate to="/" replace />
   return (
     <main className="container" style={{ maxWidth: 420 }}>
       <div className="text-center mt-5 mb-4"><img src="/icon.svg" alt="" width="76" height="76" className="mb-2" /><h1 className="h3 fw-bold mb-0">Una Más</h1><p className="text-muted small mb-0">Siempre se puede una más</p></div>
@@ -40,7 +42,7 @@ export function Login() {
   const { error, busy, run } = useSubmit(async () => {
     const { error } = await signIn(email, password)
     if (error) throw error
-    nav('/')
+    nav('/', { replace: true })
   })
   return (
     <Shell title="Iniciar sesión">
@@ -142,7 +144,7 @@ export function Reset() {
     setTimeout(() => nav('/'), 1200)
   })
   return (
-    <Shell title="Nueva contraseña">
+    <Shell title="Nueva contraseña" guest={false}>
       <form onSubmit={run}>
         <ErrorMsg error={error} />
         <InfoMsg info={info} />

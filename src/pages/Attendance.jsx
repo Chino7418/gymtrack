@@ -25,7 +25,7 @@ export default function Attendance() {
     setError(''); setSaving(date)
     const found = rows.find((r) => r.attendance_date === date)
     const { error } = found
-      ? await supabase.from(T.attendances).delete().eq('id', found.id)
+      ? await supabase.from(T.attendances).delete().eq('attendance_date', date) // todas las filas del día (RLS limita al usuario)
       : await supabase.from(T.attendances).insert({ user_id: user.id, attendance_date: date })
     if (error) setError(error.message); else await load()
     setSaving(null)

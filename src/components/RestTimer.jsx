@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Timer, Pause, Play, RotateCcw } from 'lucide-react'
 
 const PRESETS = [30, 60, 90, 120, 180]
@@ -53,6 +53,9 @@ export default function RestTimer() {
     return () => { document.title = 'Una Más' }
   }, [running, left])
 
+  // Ignora el segundo toque de un doble clic: el botón cambia de Iniciar a Pausar bajo el dedo
+  const lastTap = useRef(0)
+  const once = (fn) => () => { const now = Date.now(); if (now - lastTap.current < 400) return; lastTap.current = now; fn() }
   const run = (secs) => { setDone(false); setLeft(secs); setEndAt(Date.now() + secs * 1000); setRunning(true) }
   const start = () => run(done || left <= 0 ? total : left)
   const pause = () => setRunning(false)
@@ -67,9 +70,10 @@ export default function RestTimer() {
   // El anillo se vacía a medida que pasa el descanso
   const frac = left > 0 ? Math.min(1, left / Math.max(total, left)) : 0
   const state = done ? 'done' : running ? 'run' : 'idle'
-  const caption = done ? '¡A la serie!' : running ? 'descansando' : left < total ? 'en pausa' : 'listo'
+  const paused = !running && !done && left > 0 && left !== total
+  const caption = done ? '¡A la serie!' : running ? 'descansando' : paused ? 'en pausa' : 'listo'
   // Solo se anuncian los cambios de estado, no cada segundo
-  const announce = done ? 'Descanso terminado. ¡A la próxima serie!' : running ? 'Descanso iniciado' : left < total ? 'Descanso en pausa' : ''
+  const announce = done ? 'Descanso terminado. ¡A la próxima serie!' : running ? 'Descanso iniciado' : paused ? 'Descanso en pausa' : ''
   const preset = (s) => (s % 60 ? `${s} segundos` : `${s / 60} minuto${s > 60 ? 's' : ''}`)
 
   return (
@@ -91,8 +95,8 @@ export default function RestTimer() {
           <div className="timer-controls">
             <div className="d-flex gap-2">
               {running
-                ? <button className="btn btn-warning flex-grow-1 gap-2" onClick={pause}><Pause size={18} aria-hidden="true" />Pausar</button>
-                : <button className="btn btn-primary flex-grow-1 gap-2" onClick={start}><Play size={18} aria-hidden="true" />{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
+                ? <button className="btn btn-warning flex-grow-1 gap-2" onClick={once(pause)}><Pause size={18} aria-hidden="true" />Pausar</button>
+                : <button className="btn btn-primary flex-grow-1 gap-2" onClick={once(start)}><Play size={18} aria-hidden="true" />{paused ? 'Seguir' : 'Iniciar'}</button>}
               <button className="btn btn-outline-secondary" onClick={plus} aria-label="+15 segundos">+15</button>
               <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">
                 <RotateCcw size={18} aria-hidden="true" />
@@ -100,7 +104,7 @@ export default function RestTimer() {
             </div>
             <div className="d-flex flex-wrap gap-2" role="group" aria-label="Duración del descanso">
               {PRESETS.map((s) => (
-                <button key={s} className={`btn btn-sm timer-preset ${total === s ? 'active' : ''}`} aria-pressed={total === s} aria-label={preset(s)} onClick={() => choose(s)}>
+                <button key={s} className={`btn btn-sm timer-preset ${total === s ? 'active' : ''}`} aria-pressed={total === s} aria-label={`${s % 60 ? `${s}s` : `${s / 60}m`}, ${preset(s)}`} onClick={() => choose(s)}>
                   {s % 60 ? `${s}s` : `${s / 60}m`}
                 </button>
               ))}
