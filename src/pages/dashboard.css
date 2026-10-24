@@ -2,6 +2,7 @@
 .stat { display: block; padding: 0.7rem 0.75rem; text-decoration: none; color: inherit; transition: border-color 0.15s; }
 .stat:hover { color: inherit; border-color: var(--line-strong); }
 button.stat { font: inherit; text-align: left; width: 100%; }
+.stat-label, .stat-value, .stat-sub { display: block; }
 .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); }
 .stat-value { font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; }
 .stat-value small { font-size: 0.72rem; font-weight: 500; margin-left: 0.15rem; color: var(--bs-secondary-color); }
@@ -19,12 +20,8 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 .timer-ring { position: relative; width: 116px; height: 116px; flex: none; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-track { fill: none; stroke: var(--track); stroke-width: 9; }
-.timer-arc { fill: none; stroke: url(#timerGrad); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s; }
-[data-bs-theme="light"] .timer-arc { stroke: var(--accent); }
-/* Degradé del arco más claro en oscuro (≥3:1 contra el track). stop-color en CSS pisa el atributo del SVG. */
-[data-bs-theme="dark"] .timer-ring stop:first-child { stop-color: #7c9cff; }
-[data-bs-theme="dark"] .timer-ring stop:last-child { stop-color: #b98cff; }
-[data-bs-theme="dark"] .timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(124, 92, 255, 0.55)); }
+.timer-arc { fill: none; stroke: var(--accent); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s; }
+[data-bs-theme="dark"] .timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(232, 185, 49, 0.45)); }
 .timer-done .timer-arc { stroke: var(--danger); filter: none; }
 .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-digits { font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }

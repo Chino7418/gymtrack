@@ -1,109 +1,108 @@
-/* Una Más · temas de color: oscuro "Vidrio mejorado" y claro "Tiza" (el atributo data-bs-theme lo pone src/lib/theme.js) */
+/* Una Más · temas de color: oscuro "Oro olímpico" y claro "Oro claro" (el atributo data-bs-theme lo pone src/lib/theme.js) */
 
-/* ---------- 1. Tokens: mismo set en los dos temas ---------- */
+/* ---------- 1. Tokens: mismo set en los dos temas ----------
+   Oscuro "Oro olímpico" y claro "Oro claro". Contrastes WCAG AA verificados. */
 
 [data-bs-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #000000;
-  --bg-rgb: 0, 0, 0;
-  /* Tarjeta de vidrio: color base + brillo diagonal. Sólido equivalente (peor caso, sobre halo): #252634 */
-  --surface: rgba(16, 17, 24, 0.80);
-  --surface-sheen: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  --surface-solid: #15161d;            /* selects, opciones, fallback */
-  --surface-strong: rgba(255, 255, 255, 0.10);  /* hover, fondo de chip/miniatura */
-  --input-bg: rgba(255, 255, 255, 0.06);
-  --input-bg-focus: rgba(255, 255, 255, 0.10);
+  --bg: #0f0f13;
+  --bg-rgb: 15, 15, 19;
+  --surface: #1a1a20;
+  --surface-sheen: linear-gradient(transparent, transparent);
+  --surface-solid: #1a1a20;
+  --surface-strong: #26262e;
+  --input-bg: #14141a;
+  --input-bg-focus: #17171d;
 
-  --line: rgba(255, 255, 255, 0.16);          /* decorativa: bordes de tarjeta, divisores */
-  --line-strong: rgba(255, 255, 255, 0.44);   /* controles: inputs, checks, outline, chips (≥3:1) */
+  --line: #2c2c35;
+  --line-strong: #6e6e7c;
 
-  --fg: #f2f4f8;
-  --fg-rgb: 242, 244, 248;
-  --muted: #aab0c0;
-  --placeholder: #9aa0b0;
-  --on-fg: #0b0d14;                    /* texto sobre fondo --fg (chip activo) */
+  --fg: #f3f1ea;
+  --fg-rgb: 243, 241, 234;
+  --muted: #a9a7a0;
+  --placeholder: #95938c;
+  --on-fg: #0f0f13;
 
-  --accent: #7c9cff;
-  --accent-rgb: 124, 156, 255;
-  --accent-fill: #7c9cff;              /* relleno de botón con texto */
-  --accent-fill-hover: #9db4ff;
-  --accent-text: #9db4ff;              /* links y texto de acento */
-  --accent-text-hover: #c3d0ff;
-  --on-accent: #0b0d1a;
-  --accent-grad: linear-gradient(135deg, #5865ff, #b446ff);
-  --outline-primary: var(--accent-text);          /* texto de botón secundario de acción */
+  --accent: #e8b931;
+  --accent-rgb: 232, 185, 49;
+  --accent-fill: #e8b931;
+  --accent-fill-hover: #f0c64a;
+  --accent-fill-border: #e8b931;
+  --accent-text: #f0c64a;
+  --accent-text-hover: #f7d77a;
+  --on-accent: #1a1403;
+  --accent-grad: linear-gradient(135deg, #f0c64a, #c99a1a);
+  --outline-primary: var(--accent-text);
   --outline-primary-border: var(--accent);
 
   --danger: #ff6b6b;
   --danger-rgb: 255, 107, 107;
   --danger-text: #ff8080;
-  --on-danger: #0b0d1a;
-  --danger-bg: rgba(255, 107, 107, 0.14);
-  --danger-border: rgba(255, 107, 107, 0.55);
+  --on-danger: #1a0606;
+  --danger-bg: rgba(255, 107, 107, 0.12);
+  --danger-border: rgba(255, 107, 107, 0.5);
 
-  --success: #34d17a;                  /* texto */
-  --success-fill: #2fbf71;             /* día asistido, botón success */
+  --success: #34d17a;
+  --success-fill: #2fbf71;
   --success-fill-rgb: 47, 191, 113;
   --on-success: #04140b;
-  --success-bg: rgba(52, 209, 122, 0.14);
-  --success-border: rgba(52, 209, 122, 0.55);
+  --success-bg: rgba(52, 209, 122, 0.12);
+  --success-border: rgba(52, 209, 122, 0.5);
 
-  --warning: #ffc233;
-  --warning-rgb: 255, 194, 51;
-  --on-warning: #0b0d1a;
+  --warning: #ff9f1c;
+  --warning-rgb: 255, 159, 28;
+  --on-warning: #1a1403;
 
-  --focus: #9db4ff;
-  --track: rgba(255, 255, 255, 0.12);
+  --focus: #f0c64a;
+  --track: #2a2a32;
 
-  --nav-bg: rgba(8, 8, 12, 0.88);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
-  --halo-1: rgba(88, 101, 255, 0.30);
-  --halo-2: rgba(0, 210, 180, 0.16);
-  --halo-3: rgba(180, 70, 255, 0.20);
+  --nav-bg: rgba(15, 15, 19, 0.94);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --halo-1: transparent;
+  --halo-2: transparent;
+  --halo-3: transparent;
 
-  /* Íconos SVG de formulario (color fijo por tema) */
-  --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230b0d1a' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
-  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23aab0c0'/%3e%3c/svg%3e");
-  --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%230b0d1a'/%3e%3c/svg%3e");
+  --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%231a1403' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23a9a7a0'/%3e%3c/svg%3e");
+  --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231a1403'/%3e%3c/svg%3e");
 }
 
 [data-bs-theme="light"] {
   color-scheme: light;
 
-  --bg: #efeee9;
-  --bg-rgb: 239, 238, 233;
-  --surface: #fafaf7;
-  --surface-sheen: none;
-  --surface-solid: #fafaf7;
-  --surface-strong: #eceae4;
+  --bg: #f5f3ec;
+  --bg-rgb: 245, 243, 236;
+  --surface: #fffdf7;
+  --surface-sheen: linear-gradient(transparent, transparent);
+  --surface-solid: #fffdf7;
+  --surface-strong: #ece8dc;
   --input-bg: #ffffff;
   --input-bg-focus: #ffffff;
 
-  --line: #d9d7cf;
-  --line-strong: #85837b;
+  --line: #e2ddd0;
+  --line-strong: #8a8578;
 
-  --fg: #141413;
-  --fg-rgb: 20, 20, 19;
-  --muted: #62615b;                    /* ajustado desde #6b6a64 para dejar margen sobre --bg y fondos tintados */
-  --placeholder: #75736c;
-  --on-fg: #fafaf7;
+  --fg: #17150f;
+  --fg-rgb: 23, 21, 15;
+  --muted: #5f5b50;
+  --placeholder: #77736a;
+  --on-fg: #fffdf7;
 
-  --accent: #e8361f;                   /* gráficos: anillo, check, bordes activos */
-  --accent-rgb: 232, 54, 31;
-  --accent-fill: #d0301a;              /* #e8361f con blanco da 4.22:1; este da 5.10:1 */
-  --accent-fill-hover: #b82814;
-  --accent-text: #c92a15;
-  --accent-text-hover: #a32210;
-  --on-accent: #ffffff;
-  --accent-grad: linear-gradient(135deg, #e8361f, #c92a15);
-  /* En Tiza el rojo queda para la acción principal (relleno) y para borrar (outline).
-     Las acciones secundarias van en tinta para no confundirse con Borrar. */
+  --accent: #946b00;                   /* gráficos: anillo, check, bordes activos (≥3:1) */
+  --accent-rgb: 148, 107, 0;
+  --accent-fill: #e8b931;              /* relleno de botón con texto oscuro (9.97:1) */
+  --accent-fill-hover: #f0c64a;
+  --accent-fill-border: #946b00;       /* el dorado sobre crema necesita borde para recortarse */
+  --accent-text: #7a5a00;
+  --accent-text-hover: #5c4400;
+  --on-accent: #1a1403;
+  --accent-grad: linear-gradient(135deg, #e8b931, #946b00);
   --outline-primary: var(--fg);
   --outline-primary-border: var(--fg);
 
-  --danger: #a8231b;                   /* más oscuro y más carmín que el acento, para diferenciarlo */
+  --danger: #a8231b;
   --danger-rgb: 168, 35, 27;
   --danger-text: #a8231b;
   --on-danger: #ffffff;
@@ -117,24 +116,33 @@
   --success-bg: #e5f2e9;
   --success-border: #a9d3b8;
 
-  --warning: #f5b700;
-  --warning-rgb: 245, 183, 0;
-  --on-warning: #141413;
+  --warning: #c2410c;
+  --warning-rgb: 194, 65, 12;
+  --on-warning: #ffffff;
 
-  --focus: #141413;
-  --track: #e3e1da;
+  --focus: #17150f;
+  --track: #e9e4d6;
 
-  --nav-bg: rgba(250, 250, 247, 0.94);
-  --shadow: 0 1px 2px rgba(20, 20, 19, 0.06), 0 4px 16px rgba(20, 20, 19, 0.06);
-  --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.08);
+  --nav-bg: rgba(255, 253, 247, 0.95);
+  --shadow: 0 1px 2px rgba(23, 21, 15, 0.06), 0 4px 16px rgba(23, 21, 15, 0.06);
+  --shadow-sm: 0 1px 2px rgba(23, 21, 15, 0.08);
   --halo-1: transparent;
   --halo-2: transparent;
   --halo-3: transparent;
 
   --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
-  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2362615b'/%3e%3c/svg%3e");
+  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%235f5b50'/%3e%3c/svg%3e");
   --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
 }
+
+/* Tipografía: Chakra Petch en toda la app */
+:root {
+  --font-app: "Chakra Petch", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-body-font-family: var(--font-app);
+  --bs-font-sans-serif: var(--font-app);
+}
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
+h1, .h4.mb-3, .navbar-brand { text-transform: uppercase; }
 
 /* ---------- 2. Mapeo a Bootstrap 5.3 (ambos temas) ---------- */
 [data-bs-theme="dark"], [data-bs-theme="light"] {
@@ -304,7 +312,7 @@ a:hover { color: var(--accent-text-hover); }
 
 .btn-primary {
   --bs-btn-bg: var(--accent-fill);
-  --bs-btn-border-color: var(--accent-fill);
+  --bs-btn-border-color: var(--accent-fill-border);
   --bs-btn-color: var(--on-accent);
   --bs-btn-hover-bg: var(--accent-fill-hover);
   --bs-btn-hover-border-color: var(--accent-fill-hover);

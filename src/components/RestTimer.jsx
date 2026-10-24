@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Timer, Pause, Play, RotateCcw } from 'lucide-react'
 
 const PRESETS = [30, 60, 90, 120, 180]
 const R = 52
@@ -74,16 +75,11 @@ export default function RestTimer() {
   return (
     <div className={`card h-100 timer timer-${state}`}>
       <div className="card-body p-3">
-        <h2 className="stat-label mb-2">Descanso entre series</h2>
+        <h2 className="stat-label stat-ic mb-2"><Timer size={14} aria-hidden="true" />Descanso entre series</h2>
         <span className="visually-hidden" role="status">{announce}</span>
         <div className="timer-body">
           <div className="timer-ring" role="timer" aria-label={`Descanso restante: ${fmt(left)}`}>
             <svg viewBox="0 0 120 120" aria-hidden="true">
-              <defs>
-                <linearGradient id="timerGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#5865ff" /><stop offset="1" stopColor="#b446ff" />
-                </linearGradient>
-              </defs>
               <circle cx="60" cy="60" r={R} className="timer-track" />
               <circle cx="60" cy="60" r={R} className="timer-arc" strokeDasharray={LEN} strokeDashoffset={LEN * (1 - frac)} />
             </svg>
@@ -95,11 +91,11 @@ export default function RestTimer() {
           <div className="timer-controls">
             <div className="d-flex gap-2">
               {running
-                ? <button className="btn btn-warning flex-grow-1" onClick={pause}>Pausar</button>
-                : <button className="btn btn-primary flex-grow-1" onClick={start}>{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
+                ? <button className="btn btn-warning flex-grow-1 gap-2" onClick={pause}><Pause size={18} aria-hidden="true" />Pausar</button>
+                : <button className="btn btn-primary flex-grow-1 gap-2" onClick={start}><Play size={18} aria-hidden="true" />{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
               <button className="btn btn-outline-secondary" onClick={plus} aria-label="+15 segundos">+15</button>
               <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
+                <RotateCcw size={18} aria-hidden="true" />
               </button>
             </div>
             <div className="d-flex flex-wrap gap-2" role="group" aria-label="Duración del descanso">

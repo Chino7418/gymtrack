@@ -49,3 +49,27 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Notas de las series: debajo de la lista, cada una con su número */
+.set-notes { display: grid; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--bs-border-color); }
+.set-note { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0.5rem; align-items: center; }
+.set-note-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); margin: 0; }
+
+/* Íconos junto a etiquetas */
+.stat-ic { display: flex !important; align-items: center; gap: 0.35rem; }
+.stat-ic svg { color: var(--accent-text); flex: none; }
+.btn.gap-2, .btn.gap-1 { display: inline-flex; align-items: center; justify-content: center; }
+
+/* Barra inferior (celular) */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: var(--nav-bg); border-top: 1px solid var(--line);
+  padding: 0.4rem max(0.25rem, env(safe-area-inset-right, 0px)) calc(0.45rem + env(safe-area-inset-bottom, 0px)) max(0.25rem, env(safe-area-inset-left, 0px));
+}
+.tab { display: grid; justify-items: center; gap: 0.15rem; min-height: 48px; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-decoration: none; }
+.tab:hover { color: var(--fg); }
+.tab-pill { width: 52px; height: 30px; border-radius: 999px; display: grid; place-items: center; transition: background 0.15s; }
+.tab.active { color: var(--accent-text); }
+.tab.active .tab-pill { background: rgba(var(--accent-rgb), 0.16); }
+@media (max-width: 767.98px) { .has-tabbar { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important; } }

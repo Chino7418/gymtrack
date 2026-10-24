@@ -156,11 +156,19 @@ export default function WorkoutForm() {
                   <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}>✎</button>
                   <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button>
                 </div>
-                {(s.notes || s.showNote) && (
-                  <input className="form-control mt-2" placeholder="Nota (ej.: con pausa, al fallo)" aria-label={`Nota serie ${j + 1}`} value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} />
-                )}
               </div>
             ))}
+            {/* Notas abajo de todas las series, para no cortar la lista */}
+            {it.sets.some((s) => s.notes || s.showNote) && (
+              <div className="set-notes mb-2">
+                {it.sets.map((s, j) => (s.notes || s.showNote) && (
+                  <div key={j} className="set-note">
+                    <label className="set-note-label" htmlFor={`note-${i}-${j}`}>Serie {j + 1}</label>
+                    <input id={`note-${i}-${j}`} className="form-control" placeholder="Ej.: con pausa, al fallo" value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} />
+                  </div>
+                ))}
+              </div>
+            )}
             <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => addSet(i)}>Agregar serie</button>
           </div>
         </section>

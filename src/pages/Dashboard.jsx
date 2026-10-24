@@ -6,6 +6,7 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import RestTimer from '../components/RestTimer'
+import { Scale, Target, Flame, Plus } from 'lucide-react'
 import './dashboard.css'
 
 export default function Dashboard() {
@@ -70,21 +71,21 @@ export default function Dashboard() {
       <div className="row g-2 g-md-3 mb-2 mb-md-3">
         <div className="col-4">
           <Link to="/weight" className="card stat h-100">
-            <span className="stat-label">Peso</span>
+            <span className="stat-label stat-ic"><Scale size={14} aria-hidden="true" />Peso</span>
             <span className="stat-value">{cur ?? '—'}{cur != null && <small>kg</small>}</span>
             <span className="stat-sub">{pesoSub}</span>
           </Link>
         </div>
         <div className="col-4">
           <button type="button" className="card stat h-100" onClick={openGoal} aria-expanded={editing} aria-controls="goal-form">
-            <span className="stat-label">Objetivo</span>
+            <span className="stat-label stat-ic"><Target size={14} aria-hidden="true" />Objetivo</span>
             <span className="stat-value">{goal ?? '—'}{goal != null && <small>kg</small>}</span>
             <span className="stat-sub">{objSub}</span>
           </button>
         </div>
         <div className="col-4">
           <Link to="/attendance" className="card stat h-100">
-            <span className="stat-label">Asistencia</span>
+            <span className="stat-label stat-ic"><Flame size={14} aria-hidden="true" />Asistencia</span>
             <span className="stat-value">{data.month}<small>días</small></span>
             <span className="stat-sub">{dayjs().format('MMM')} · {data.total} total</span>
           </Link>
@@ -114,9 +115,10 @@ export default function Dashboard() {
                     <span className="text-muted small">{dayjs(data.lastWorkout.workout_date).format('ddd DD/MM')}</span></>
                 ) : <div className="text-muted small">Todavía no registraste ninguno</div>}
               </div>
-              <Link to="/workouts/new" className="btn btn-primary text-nowrap">
+              <Link to="/workouts/new" className="btn btn-primary text-nowrap d-inline-flex align-items-center gap-1">
+                <Plus size={18} aria-hidden="true" />
                 <span className="d-none d-sm-inline">Nuevo entrenamiento</span>
-                <span className="d-sm-none">+ Nuevo</span>
+                <span className="d-sm-none">Nuevo</span>
               </Link>
             </div>
           </div>

@@ -1,34 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5865ff"/>
-      <stop offset="1" stop-color="#b446ff"/>
-    </linearGradient>
-    <clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <g clip-path="url(#r)">
-    <!-- Brazo flexionado haciendo "una más" (índice arriba) -->
-    <path fill="#fff" d="M-10 350
-      C40 335 90 232 180 216
-      C250 204 292 240 304 286
-      C307 262 310 238 312 224
-      L300 224 C288 224 282 212 282 200
-      L282 142 C282 128 290 120 302 118
-      L302 50 C302 26 340 26 340 50 L340 116
-      C346 104 368 104 374 118
-      C380 106 402 108 408 124
-      C414 134 416 148 416 160
-      L416 198 C416 214 408 222 398 225
-      C422 292 432 362 412 412
-      C396 448 360 464 318 466
-      L-10 476 Z"/>
-    <g fill="none" stroke="#7a55ff" stroke-width="9" stroke-linecap="round">
-      <path d="M284 182 C318 184 356 180 390 168"/>
-      <path d="M340 118 L340 142"/>
-      <path d="M374 120 L374 140"/>
-      <path d="M140 318 C190 296 250 300 286 330"/>
-    </g>
+  <!-- Una Más: barras de progreso y la próxima por hacer -->
+  <rect width="512" height="512" rx="112" fill="#e8b931"/>
+  <g fill="#1a1403">
+    <rect x="98" y="300" width="56" height="112" rx="14" opacity="0.45"/>
+    <rect x="178" y="250" width="56" height="162" rx="14" opacity="0.6"/>
+    <rect x="258" y="196" width="56" height="216" rx="14" opacity="0.8"/>
   </g>
-  <text x="78" y="190" fill="#fff" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="112">+1</text>
+  <rect x="338" y="196" width="56" height="216" rx="14" fill="none" stroke="#1a1403" stroke-width="12" stroke-dasharray="20 14"/>
+  <path d="M366 92 v76 M328 130 h76" stroke="#1a1403" stroke-width="30" stroke-linecap="round"/>
 </svg>
