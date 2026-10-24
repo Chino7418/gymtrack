@@ -41,8 +41,8 @@
 .att-day.att-today { outline: 2px dashed var(--bs-secondary-color); outline-offset: -4px; }
 .att-check { position: absolute; top: 2px; right: 5px; font-size: 0.7rem; line-height: 1; }
 
-/* Listas con scroll interno: que no arrastren la página */
-.catalog-list { overscroll-behavior: contain; }
+/* overscroll-behavior va solo donde la lista scrollea (styles.css, desde tablet): en celular
+   la lista tiene overflow hidden y "contain" bloqueaba el scroll de la página con el dedo encima */
 
 /* Movimiento reducido */
 .timer-done .timer-caption { animation-iteration-count: 5; }
