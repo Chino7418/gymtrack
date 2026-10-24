@@ -1,4 +1,4 @@
-/* GymTrack · tema negro con glassmorfismo */
+/* Una Más · tema negro con glassmorfismo */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-bg-strong: rgba(255, 255, 255, 0.10);
@@ -152,3 +152,11 @@ a:hover { color: #c3d0ff; }
 
 .min-w-0 { min-width: 0; }
 .catalog-list { max-height: 55vh; overflow-y: auto; }
+
+/* Catálogo de ejercicios: miniatura + detalle desplegable */
+.ex-row { display: flex; align-items: center; gap: 0.75rem; background: none; border: 0; padding: 0; color: inherit; text-align: left; font: inherit; }
+.ex-thumb { width: 48px; height: 48px; flex: none; border-radius: 0.6rem; object-fit: contain; background: #fff; }
+.ex-thumb-empty { display: flex; align-items: center; justify-content: center; background: var(--glass-bg-strong); color: var(--bs-secondary-color); font-weight: 700; text-transform: uppercase; }
+.ex-detail { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; }
+.ex-detail p { flex: 1 1 14rem; white-space: pre-line; }
+.ex-image { width: 100%; max-width: 220px; border-radius: 0.75rem; background: #fff; }

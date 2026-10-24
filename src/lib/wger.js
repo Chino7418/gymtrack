@@ -37,7 +37,10 @@ export async function ejerciciosPorCategoria(cat) {
     .map((e) => {
       const t = e.translations.find((x) => x.language === ES) ?? e.translations.find((x) => x.language === EN)
       if (!t?.name?.trim()) return null
+      const img = e.images.find((i) => i.is_main) ?? e.images[0]
       return {
+        thumb: img?.thumbnails?.small ?? img?.image ?? null,
+        image: img?.thumbnails?.medium ?? img?.image ?? null,
         id: e.id,
         name: t.name.trim().slice(0, 150),
         muscle_group: grupo(e.category.id, e.muscles),

@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const PRESETS = [30, 60, 90, 120, 180]
+const R = 52
+const LEN = 2 * Math.PI * R
 
 const fmt = (s) => {
   const n = Math.max(0, Math.ceil(s))
@@ -26,16 +28,16 @@ export default function RestTimer() {
   const [left, setLeft] = useState(init.left)
   const [running, setRunning] = useState(init.running)
   const [done, setDone] = useState(init.done)
-  const endRef = useRef(init.endAt)
+  const [endAt, setEndAt] = useState(init.endAt)
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify({ total, left, running, done, endAt: endRef.current })) } catch { /* sin storage */ }
-  }, [total, running, done, running ? 0 : left])
+    try { localStorage.setItem(KEY, JSON.stringify({ total, left, running, done, endAt })) } catch { /* sin storage */ }
+  }, [total, running, done, endAt, running ? 0 : left])
 
   useEffect(() => {
     if (!running) return
     const id = setInterval(() => {
-      const rem = (endRef.current - Date.now()) / 1000
+      const rem = (endAt - Date.now()) / 1000
       if (rem <= 0) {
         clearInterval(id)
         setLeft(0); setRunning(false); setDone(true)
@@ -43,51 +45,66 @@ export default function RestTimer() {
       } else setLeft(rem)
     }, 200)
     return () => clearInterval(id)
-  }, [running])
+  }, [running, endAt])
 
   useEffect(() => {
-    document.title = running ? `${fmt(left)} · GymTrack` : 'GymTrack'
-    return () => { document.title = 'GymTrack' }
+    document.title = running ? `${fmt(left)} · Una Más` : 'Una Más'
+    return () => { document.title = 'Una Más' }
   }, [running, left])
 
-  const start = () => {
-    const from = done || left <= 0 ? total : left
-    setDone(false); setLeft(from)
-    endRef.current = Date.now() + from * 1000
-    setRunning(true)
-  }
+  const run = (secs) => { setDone(false); setLeft(secs); setEndAt(Date.now() + secs * 1000); setRunning(true) }
+  const start = () => run(done || left <= 0 ? total : left)
   const pause = () => setRunning(false)
   const reset = () => { setRunning(false); setDone(false); setLeft(total) }
   const choose = (s) => { setTotal(s); setLeft(s); setRunning(false); setDone(false) }
+  const plus = () => {
+    if (done) return run(15)
+    if (running) setEndAt(endAt + 15000)
+    setLeft(left + 15)
+  }
 
-  const pct = total > 0 ? Math.min(100, ((total - left) / total) * 100) : 0
+  // El anillo se vacía a medida que pasa el descanso
+  const frac = left > 0 ? Math.min(1, left / Math.max(total, left)) : 0
+  const state = done ? 'done' : running ? 'run' : 'idle'
+  const caption = done ? '¡A la serie!' : running ? 'descansando' : left < total ? 'en pausa' : 'listo'
 
   return (
-    <div className="card h-100">
+    <div className={`card h-100 timer timer-${state}`}>
       <div className="card-body p-3">
-        <div className="d-flex align-items-center justify-content-between gap-2">
-          <div>
-            <div className="stat-label">Descanso entre series</div>
-            <div className={`timer-digits ${done ? 'text-danger' : ''}`} aria-live="polite">{fmt(left)}</div>
+        <div className="stat-label mb-2">Descanso entre series</div>
+        <div className="d-flex align-items-center gap-3">
+          <div className="timer-ring" aria-live="polite">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="timerGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#5865ff" /><stop offset="1" stopColor="#b446ff" />
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r={R} className="timer-track" />
+              <circle cx="60" cy="60" r={R} className="timer-arc" strokeDasharray={LEN} strokeDashoffset={LEN * (1 - frac)} />
+            </svg>
+            <div className="timer-center">
+              <div className="timer-digits">{fmt(left)}</div>
+              <div className="timer-caption">{caption}</div>
+            </div>
           </div>
-          <div className="d-flex gap-2">
-            {running
-              ? <button className="btn btn-warning" onClick={pause}>Pausar</button>
-              : <button className="btn btn-success" onClick={start}>{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
-            <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">↺</button>
+          <div className="flex-grow-1 min-w-0">
+            <div className="d-flex gap-2 mb-2">
+              {running
+                ? <button className="btn btn-warning flex-grow-1" onClick={pause}>Pausar</button>
+                : <button className="btn btn-primary flex-grow-1" onClick={start}>{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
+              <button className="btn btn-outline-secondary" onClick={plus} aria-label="Sumar 15 segundos">+15</button>
+              <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">↺</button>
+            </div>
+            <div className="d-flex flex-wrap gap-1">
+              {PRESETS.map((s) => (
+                <button key={s} className={`btn btn-sm timer-preset ${total === s ? 'active' : ''}`} onClick={() => choose(s)}>
+                  {s % 60 ? `${s}s` : `${s / 60}m`}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="progress my-2" style={{ height: 6 }}>
-          <div className={`progress-bar ${done ? 'bg-danger' : ''}`} style={{ width: `${pct}%` }} />
-        </div>
-        <div className="d-flex flex-wrap justify-content-center gap-1">
-          {PRESETS.map((s) => (
-            <button key={s} className={`btn btn-sm ${total === s ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => choose(s)}>
-              {s >= 60 ? `${s / 60} min` : `${s} s`}
-            </button>
-          ))}
-        </div>
-        {done && <div className="alert alert-danger py-1 mt-2 mb-0 text-center">¡Descanso terminado! A la próxima serie.</div>}
       </div>
     </div>
   )

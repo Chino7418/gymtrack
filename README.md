@@ -1,4 +1,4 @@
-# GymTrack
+# Una Más
 
 Aplicación web para registrar entrenamientos, ejercicios, asistencia y peso corporal. Desarrollada con React + Vite + Bootstrap 5 + Supabase + PostgreSQL.
 

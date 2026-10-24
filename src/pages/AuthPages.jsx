@@ -8,7 +8,7 @@ import { traducir } from '../lib/errores'
 function Shell({ title, children }) {
   return (
     <div className="container" style={{ maxWidth: 420 }}>
-      <h1 className="h3 text-center mt-5 mb-4">GymTrack</h1>
+      <div className="text-center mt-5 mb-4"><img src="/icon.svg" alt="" width="76" height="76" className="mb-2" /><h1 className="h3 fw-bold mb-0">Una Más</h1><p className="text-muted small mb-0">Siempre se puede una más</p></div>
       <div className="card card-body">
         <h2 className="h5 mb-3">{title}</h2>
         {children}

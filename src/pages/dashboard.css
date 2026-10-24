@@ -6,7 +6,6 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 .stat-value { font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; }
 .stat-value small { font-size: 0.72rem; font-weight: 500; margin-left: 0.15rem; color: var(--bs-secondary-color); }
 .stat-sub { font-size: 0.72rem; color: var(--bs-secondary-color); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.timer-digits { font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 
 @media (min-width: 768px) {
   .stat { padding: 1rem 1.25rem; }
@@ -14,5 +13,26 @@ button.stat { font: inherit; text-align: left; width: 100%; }
   .stat-value { font-size: 2.6rem; }
   .stat-value small { font-size: 1rem; }
   .stat-sub { font-size: 0.85rem; }
-  .timer-digits { font-size: 3.6rem; }
+}
+
+/* Temporizador: anillo que se vacía */
+.timer-ring { position: relative; width: 116px; height: 116px; flex: none; }
+.timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: rgba(255, 255, 255, 0.09); stroke-width: 9; }
+.timer-arc { fill: none; stroke: url(#timerGrad); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s; }
+.timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(124, 92, 255, 0.55)); }
+.timer-done .timer-arc { stroke: var(--bs-danger); }
+.timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.timer-digits { font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.timer-done .timer-digits { color: var(--bs-danger); }
+.timer-caption { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--bs-secondary-color); margin-top: 0.25rem; }
+.timer-done .timer-caption { color: var(--bs-danger); animation: timer-pulse 1s ease-in-out infinite; }
+.timer-preset { border: 1px solid var(--glass-border); color: var(--bs-secondary-color); border-radius: 999px; padding: 0.15rem 0.65rem; }
+.timer-preset:hover { color: var(--bs-body-color); border-color: rgba(255, 255, 255, 0.3); }
+.timer-preset.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+@keyframes timer-pulse { 50% { opacity: 0.4; } }
+
+@media (min-width: 768px) {
+  .timer-ring { width: 150px; height: 150px; }
+  .timer-digits { font-size: 2.2rem; }
 }

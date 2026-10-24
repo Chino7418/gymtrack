@@ -20,7 +20,7 @@ function Layout() {
     <div className="d-flex flex-column min-vh-100">
       <nav className="navbar navbar-expand-md navbar-dark bg-dark">
         <div className="container">
-          <span className="navbar-brand fw-bold">GymTrack</span>
+          <span className="navbar-brand fw-bold d-flex align-items-center gap-2"><img src="/icon.svg" alt="" width="30" height="30" />Una Más</span>
           <button className="navbar-toggler" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="nav" aria-label="Menú">
             <span className="navbar-toggler-icon" />
           </button>
@@ -38,7 +38,7 @@ function Layout() {
       </nav>
       <main className="container py-4 flex-grow-1"><Outlet /></main>
       <footer className="border-top py-3 text-center small text-muted">
-        GymTrack · {new Date().getFullYear()} · Tus entrenamientos, en un solo lugar
+        Una Más · {new Date().getFullYear()} · Tus entrenamientos, en un solo lugar
       </footer>
     </div>
   )
