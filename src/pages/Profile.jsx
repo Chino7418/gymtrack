@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ListChecks, LogOut, ChevronRight } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
@@ -108,9 +107,6 @@ export default function Profile() {
             <div className="card-body p-3">
               <h2 id="ajustes" className="h6 text-muted mb-2">Ajustes</h2>
               <div className="settings">
-                <Link to="/exercises" className="settings-row">
-                  <ListChecks size={20} aria-hidden="true" /><span>Mis ejercicios</span><ChevronRight size={18} className="ms-auto text-muted" aria-hidden="true" />
-                </Link>
                 <div className="settings-row">
                   <span className="me-auto">Tema</span><ThemeToggle />
                 </div>

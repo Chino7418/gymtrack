@@ -82,3 +82,17 @@
 .settings-row svg { flex: none; }
 a.settings-row:hover, button.settings-row:hover { color: var(--accent-text); }
 button.settings-row.text-danger-emphasis { color: var(--danger-text) !important; }
+
+/* Solapas segmentadas (Entrenos: Entrenamientos / Mis ejercicios) */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--line); border-radius: 0.8rem; background: var(--surface); }
+.seg-item { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 0.6rem; font-weight: 600; color: var(--muted); text-decoration: none; }
+.seg-item:hover { color: var(--fg); }
+.seg-item.active { background: var(--accent-fill); color: var(--on-accent); }
+
+/* Carga rápida: series × reps · kg mín – kg máx en una línea */
+.quick-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.35rem; align-items: end; margin-bottom: 0.4rem; }
+.quick-field { display: grid; gap: 0.2rem; margin: 0; min-width: 0; }
+.quick-field span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); white-space: nowrap; }
+.quick-field .form-control { padding-inline: 0.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.quick-sep { padding-bottom: 0.55rem; color: var(--muted); font-weight: 700; }
+.quick-preview { font-variant-numeric: tabular-nums; }

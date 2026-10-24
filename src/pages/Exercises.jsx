@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker from '../components/ExercisePicker'
 import ConfirmButton from '../components/ConfirmButton'
+import TrainingTabs from '../components/TrainingTabs'
 
 const GRUPOS = ['Pecho', 'Espalda', 'Hombros', 'Biceps', 'Triceps', 'Piernas', 'Gluteos', 'Abdomen', 'Otro']
 const VACIO = { id: null, name: '', muscle_group: '', description: '' }
@@ -53,7 +54,8 @@ export default function Exercises() {
 
   return (
     <>
-      <h1 className="h4 mb-3">Ejercicios</h1>
+      <h1 className="h4 mb-3">Entrenos</h1>
+      <TrainingTabs />
       <ErrorMsg error={error} />
       <div className="d-flex flex-wrap gap-2 mb-3">
         <button className={`btn ${mode === 'catalog' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => toggle('catalog')} aria-expanded={mode === 'catalog'}>Buscar en catálogo</button>

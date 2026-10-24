@@ -3,11 +3,22 @@ import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
+import { buildSets, quickError, summarize, describe } from '../lib/sets'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
 
 const emptySet = () => ({ weight_kg: '', reps: '', notes: '' })
+const emptyQuick = () => ({ series: '', reps: '', min: '', max: '' })
+
+// Un ejercicio se carga en modo rápido (series × reps · peso mín–máx) si sus series lo permiten;
+// si no (reps distintas, notas por serie), en modo detallado.
+const toItem = (exercise_id, sets, extra = {}) => {
+  const quick = summarize(sets)
+  return quick
+    ? { exercise_id, notes: '', mode: 'quick', quick, sets: [], ...extra }
+    : { exercise_id, notes: '', mode: 'detail', quick: emptyQuick(), sets, ...extra }
+}
 
 export default function WorkoutForm() {
   const { id } = useParams()
@@ -34,11 +45,11 @@ export default function WorkoutForm() {
         if (error) setError(error.message)
         else {
           setName(data.name); setDate(data.workout_date); setNotes(data.notes ?? '')
-          setItems([...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => ({
-            exercise_id: we.exercise_id, notes: we.notes ?? '',
-            sets: [...we[T.workoutSets]].sort((a, b) => a.set_number - b.set_number)
-              .map((s) => ({ weight_kg: s.weight_kg ?? '', reps: s.reps ?? '', notes: s.notes ?? '' })),
-          })))
+          setItems([...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => {
+            const sets = [...we[T.workoutSets]].sort((a, b) => a.set_number - b.set_number)
+              .map((s) => ({ weight_kg: s.weight_kg ?? '', reps: s.reps ?? '', notes: s.notes ?? '' }))
+            return toItem(we.exercise_id, sets, { notes: we.notes ?? '', showExNote: !!we.notes })
+          }))
         }
       }
       setLoading(false)
@@ -46,12 +57,19 @@ export default function WorkoutForm() {
   }, [id])
 
   const upd = (i, patch) => setItems(items.map((x, k) => (k === i ? { ...x, ...patch } : x)))
+  const updQuick = (i, patch) => upd(i, { quick: { ...items[i].quick, ...patch } })
   const updSet = (i, j, patch) => upd(i, { sets: items[i].sets.map((s, k) => (k === j ? { ...s, ...patch } : s)) })
   // Nueva serie = copia de la anterior (peso y reps), para cargar más rápido
   const addSet = (i) => {
     const last = items[i].sets.at(-1)
     upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '', showNote: false } : emptySet()] })
   }
+  // Rápido → detallado: genera las series para poder corregir una por una
+  const toDetail = (i) => {
+    const it = items[i]
+    upd(i, { mode: 'detail', sets: quickError(it.quick) ? (it.sets.length ? it.sets : [emptySet()]) : buildSets(it.quick) })
+  }
+  const toQuick = (i) => upd(i, { mode: 'quick', quick: summarize(items[i].sets) })
 
   // Del catálogo wger: si no está en mis ejercicios, lo crea
   const ensureExercise = async (x) => {
@@ -88,11 +106,11 @@ export default function WorkoutForm() {
     const ex = await ensureExercise(x)
     if (!ex) return
     const prev = await lastSets(ex.id)
-    setItems((list) => [...list, { exercise_id: ex.id, notes: '', sets: prev?.sets.length ? prev.sets : [emptySet()], prev }])
+    // Se precarga lo de la última vez; si es la primera, carga rápida vacía
+    setItems((list) => [...list, prev?.sets.length ? toItem(ex.id, prev.sets, { prev }) : { ...toItem(ex.id, []), mode: 'quick', quick: emptyQuick() }])
     setPicking(false)
   }
   const exName = (exId) => catalog.find((c) => c.id === exId)?.[C.exerciseName] ?? 'Ejercicio'
-  const resumen = (sets) => sets.map((s) => `${Number(s.weight_kg)}×${s.reps}`).join(' · ')
 
   const save = async (e) => {
     e.preventDefault(); setError('')
@@ -100,14 +118,20 @@ export default function WorkoutForm() {
     if (items.length === 0) return setError('Agregá al menos un ejercicio')
     for (const [i, it] of items.entries()) {
       if (!it.exercise_id) return setError(`Elegí el ejercicio #${i + 1}`)
-      for (const s of it.sets) {
-        if (s.reps === '' || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
-          return setError(`Revisá las series del ejercicio #${i + 1}: peso y repeticiones son obligatorios (mínimo 1 repetición, sin negativos)`)
+      if (it.mode === 'quick') {
+        const msg = quickError(it.quick)
+        if (msg) return setError(`${exName(it.exercise_id)}: ${msg}`)
+      } else {
+        if (it.sets.length === 0) return setError(`${exName(it.exercise_id)}: agregá al menos una serie`)
+        for (const s of it.sets) {
+          if (s.reps === '' || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
+            return setError(`Revisá las series de ${exName(it.exercise_id)}: peso y repeticiones son obligatorios (mínimo 1 repetición, sin negativos)`)
+        }
       }
     }
     const p_exercises = items.map((it, i) => ({
       exercise_id: it.exercise_id, position: i + 1, notes: it.notes || null,
-      sets: it.sets.map((s, j) => ({
+      sets: (it.mode === 'quick' ? buildSets(it.quick) : it.sets).map((s, j) => ({
         set_number: j + 1, weight_kg: Number(s.weight_kg),
         reps: Number(s.reps), notes: s.notes || null,
       })),
@@ -134,45 +158,89 @@ export default function WorkoutForm() {
         <div className="col-12 form-check ms-2"><input id="att" type="checkbox" className="form-check-input" checked={attend} onChange={(e) => setAttend(e.target.checked)} /><label htmlFor="att" className="form-check-label">Registrar asistencia ese día</label></div>
       </div>
 
-      {items.map((it, i) => (
-        <section className="card mb-3" key={i} aria-labelledby={`ex-${i}`}>
-          <div className="card-body p-3">
-            <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-              <div className="min-w-0">
-                <h2 id={`ex-${i}`} className="h6 fw-bold mb-0 text-truncate">{i + 1}. {exName(it.exercise_id)}</h2>
-                {it.prev && <small className="text-muted">Última vez ({dayjs(it.prev.date).format('DD/MM')}): {resumen(it.prev.sets)}</small>}
-              </div>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))} aria-label={`Quitar ${exName(it.exercise_id)}`}>Quitar</button>
-            </div>
-            {it.sets.length > 0 && (
-              <div className="set-row set-head" aria-hidden="true"><span>Serie</span><span>Kg</span><span>Reps</span></div>
-            )}
-            {it.sets.map((s, j) => (
-              <div key={j} className="mb-2">
-                <div className="set-row">
-                  <span className="set-num">{j + 1}</span>
-                  <input type="number" inputMode="decimal" min="0" step="any" className="form-control" aria-label={`Peso serie ${j + 1} (kg)`} value={s.weight_kg} onChange={(e) => updSet(i, j, { weight_kg: e.target.value })} />
-                  <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" aria-label={`Repeticiones serie ${j + 1}`} value={s.reps} onChange={(e) => updSet(i, j, { reps: e.target.value })} />
-                  <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}>✎</button>
-                  <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button>
+      {items.map((it, i) => {
+        const exLabel = exName(it.exercise_id)
+        const preview = it.mode === 'quick' && !quickError(it.quick) ? buildSets(it.quick) : null
+        return (
+          <section className="card mb-3" key={i} aria-labelledby={`ex-${i}`}>
+            <div className="card-body p-3">
+              <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div className="min-w-0">
+                  <h2 id={`ex-${i}`} className="h6 fw-bold mb-0 text-truncate">{i + 1}. {exLabel}</h2>
+                  {it.prev && <small className="text-muted">Última vez ({dayjs(it.prev.date).format('DD/MM')}): {describe(it.prev.sets)}</small>}
                 </div>
+                <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))} aria-label={`Quitar ${exLabel}`}>Quitar</button>
               </div>
-            ))}
-            {/* Notas abajo de todas las series, para no cortar la lista */}
-            {it.sets.some((s) => s.notes || s.showNote) && (
-              <div className="set-notes mb-2">
-                {it.sets.map((s, j) => (s.notes || s.showNote) && (
-                  <div key={j} className="set-note">
-                    <label className="set-note-label" htmlFor={`note-${i}-${j}`}>Serie {j + 1}</label>
-                    <input id={`note-${i}-${j}`} className="form-control" placeholder="Ej.: con pausa, al fallo" value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} />
+
+              {it.mode === 'quick' ? (
+                <>
+                  <div className="quick-row" role="group" aria-label={`Carga rápida de ${exLabel}`}>
+                    <label className="quick-field"><span>Series</span>
+                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" max="20" className="form-control" placeholder="4" value={it.quick.series} onChange={(e) => updQuick(i, { series: e.target.value })} /></label>
+                    <span className="quick-sep" aria-hidden="true">×</span>
+                    <label className="quick-field"><span>Reps</span>
+                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" placeholder="10" value={it.quick.reps} onChange={(e) => updQuick(i, { reps: e.target.value })} /></label>
+                    <span className="quick-sep" aria-hidden="true">·</span>
+                    <label className="quick-field"><span>Kg mín.</span>
+                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="30" value={it.quick.min} onChange={(e) => updQuick(i, { min: e.target.value })} /></label>
+                    <span className="quick-sep" aria-hidden="true">–</span>
+                    <label className="quick-field"><span>Kg máx.</span>
+                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="opcional" value={it.quick.max} onChange={(e) => updQuick(i, { max: e.target.value })} /></label>
                   </div>
-                ))}
+                  <p className="quick-preview small text-muted mb-2" aria-live="polite">
+                    {preview ? `Series: ${preview.map((s) => s.weight_kg).join(' · ')} kg × ${it.quick.reps}` : 'Completá series, repeticiones y peso. El máximo es opcional: si lo ponés, el peso sube parejo serie a serie.'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {it.sets.length > 0 && (
+                    <div className="set-row set-head" aria-hidden="true"><span>Serie</span><span>Kg</span><span>Reps</span></div>
+                  )}
+                  {it.sets.map((s, j) => (
+                    <div key={j} className="mb-2">
+                      <div className="set-row">
+                        <span className="set-num">{j + 1}</span>
+                        <input type="number" inputMode="decimal" min="0" step="any" className="form-control" aria-label={`Peso serie ${j + 1} (kg)`} value={s.weight_kg} onChange={(e) => updSet(i, j, { weight_kg: e.target.value })} />
+                        <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" aria-label={`Repeticiones serie ${j + 1}`} value={s.reps} onChange={(e) => updSet(i, j, { reps: e.target.value })} />
+                        <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}>✎</button>
+                        <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button>
+                      </div>
+                    </div>
+                  ))}
+                  {/* Notas abajo de todas las series, para no cortar la lista */}
+                  {it.sets.some((s) => s.notes || s.showNote) && (
+                    <div className="set-notes mb-2">
+                      {it.sets.map((s, j) => (s.notes || s.showNote) && (
+                        <div key={j} className="set-note">
+                          <label className="set-note-label" htmlFor={`note-${i}-${j}`}>Serie {j + 1}</label>
+                          <input id={`note-${i}-${j}`} className="form-control" placeholder="Ej.: con pausa, al fallo" value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {it.showExNote && (
+                <div className="mb-2">
+                  <label className="form-label small text-muted mb-1" htmlFor={`exnote-${i}`}>Nota del ejercicio</label>
+                  <input id={`exnote-${i}`} className="form-control" placeholder="Ej.: agarre cerrado, banco a 30°" value={it.notes} onChange={(e) => upd(i, { notes: e.target.value })} />
+                </div>
+              )}
+
+              <div className="d-flex flex-wrap gap-2">
+                {it.mode === 'quick'
+                  ? <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => toDetail(i)}>Detallar series</button>
+                  : <>
+                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => addSet(i)}>Agregar serie</button>
+                      {summarize(it.sets) && <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => toQuick(i)}>Carga rápida</button>}
+                    </>}
+                {!it.showExNote && <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => upd(i, { showExNote: true })}>Agregar nota</button>}
               </div>
-            )}
-            <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => addSet(i)}>Agregar serie</button>
-          </div>
-        </section>
-      ))}
+            </div>
+          </section>
+        )
+      })}
 
       {picking && <ExercisePicker mine={catalog} onPick={addExercise} includeMine />}
 

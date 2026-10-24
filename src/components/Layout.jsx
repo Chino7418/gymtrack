@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom'
-import { House, Dumbbell, ListChecks, CalendarCheck, Scale, UserRound, Sun, Moon, SunMoon } from 'lucide-react'
+import { House, Dumbbell, CalendarCheck, Scale, UserRound, Sun, Moon, SunMoon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { PREFS, PREF_LABEL, getPref, setPref } from '../lib/theme'
 
@@ -11,10 +11,10 @@ export function Protected() {
 }
 
 const LINKS = [
-  ['/', 'Inicio', House], ['/workouts', 'Entrenamientos', Dumbbell], ['/exercises', 'Ejercicios', ListChecks],
+  ['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell],
   ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound],
 ]
-// Barra inferior en celular. Tema, cerrar sesión y "Mis ejercicios" están en Perfil.
+// Barra inferior en celular. Tema y cerrar sesión están en Perfil; "Mis ejercicios" es una solapa de Entrenos.
 const TABS = [['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell], ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound]]
 const TEXT_FIELD = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select'
 
@@ -35,7 +35,7 @@ function Layout() {
 
   // Al cambiar de página: título de la pestaña y foco en el h1 (para lectores de pantalla)
   useEffect(() => {
-    const label = LINKS.find(([to]) => to !== '/' && pathname.startsWith(to))?.[1] ?? 'Inicio'
+    const label = pathname.startsWith('/exercises') ? 'Mis ejercicios' : LINKS.find(([to]) => to !== '/' && pathname.startsWith(to))?.[1] ?? 'Inicio'
     document.title = `${label} · Una Más`
     if (first.current) { first.current = false; return }
     const h1 = document.querySelector('main h1')
@@ -67,7 +67,8 @@ function Layout() {
       <main id="main" className="container py-4 flex-grow-1 has-tabbar"><Outlet /></main>
       <nav className={`tabbar d-md-none ${typing ? 'tabbar-hidden' : ''}`} aria-label="Secciones">
         {TABS.map(([to, label, Icon]) => (
-          <NavLink key={to} end={to === '/'} to={to} className="tab">
+          <NavLink key={to} end={to === '/'} to={to}
+            className={({ isActive }) => `tab ${isActive || (to === '/workouts' && pathname.startsWith('/exercises')) ? 'active' : ''}`}>
             <span className="tab-pill"><Icon size={20} aria-hidden="true" /></span>{label}
           </NavLink>
         ))}
