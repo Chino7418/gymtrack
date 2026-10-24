@@ -41,3 +41,9 @@ button.stat { font: inherit; text-align: left; width: 100%; }
   .timer-ring { width: 150px; height: 150px; }
   .timer-digits { font-size: 2.2rem; }
 }
+
+/* Insignia de cambio de peso: premio si te acerca al objetivo */
+.weight-badge { display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.3rem; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; max-width: 100%; border: 1px solid var(--line-strong); color: var(--muted); align-self: flex-start; }
+.wb-award, .wb-goal { background: var(--accent-fill); border-color: var(--accent-fill-border); color: var(--on-accent); animation: wb-pop 0.5s ease-out; }
+.wb-goal { box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25); }
+@keyframes wb-pop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }

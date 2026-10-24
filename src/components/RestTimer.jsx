@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Pause, Play, RotateCcw } from 'lucide-react'
+import { Timer, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
+import { beep, unlockAudio } from '../lib/beep'
 
 const PRESETS = [30, 60, 90, 120, 180]
 const R = 52
@@ -12,6 +13,8 @@ const fmt = (s) => {
 
 // El estado se guarda en localStorage para que el descanso siga corriendo al cambiar de pantalla
 const KEY = 'gymtrack.restTimer'
+const SOUND_KEY = 'unamas.timerSound'
+const soundOn = () => { try { return localStorage.getItem(SOUND_KEY) !== 'off' } catch { return true } }
 const restore = () => {
   let s = null
   try { s = JSON.parse(localStorage.getItem(KEY)) } catch { /* sin storage */ }
@@ -30,6 +33,13 @@ export default function RestTimer() {
   const [running, setRunning] = useState(init.running)
   const [done, setDone] = useState(init.done)
   const [endAt, setEndAt] = useState(init.endAt)
+  const [sound, setSound] = useState(soundOn)
+  const toggleSound = () => {
+    const next = !sound
+    setSound(next)
+    try { localStorage.setItem(SOUND_KEY, next ? 'on' : 'off') } catch { /* sin storage */ }
+    if (next) { unlockAudio(); beep() } // prueba del sonido al activarlo
+  }
   // Pausa explícita: con +15 el restante puede superar la duración elegida y no alcanza con comparar números
   const [paused, setPaused] = useState(init.paused ?? (!init.running && !init.done && init.left > 0 && init.left < init.total))
 
@@ -45,6 +55,7 @@ export default function RestTimer() {
         clearInterval(id)
         setLeft(0); setRunning(false); setDone(true); setPaused(false)
         navigator.vibrate?.([300, 150, 300, 150, 300])
+        if (soundOn()) beep()
       } else setLeft(rem)
     }, 200)
     return () => clearInterval(id)
@@ -59,7 +70,7 @@ export default function RestTimer() {
   const lastTap = useRef(0)
   const once = (fn) => () => { const now = Date.now(); if (now - lastTap.current < 400) return; lastTap.current = now; fn() }
   const run = (secs) => { setDone(false); setPaused(false); setLeft(secs); setEndAt(Date.now() + secs * 1000); setRunning(true) }
-  const start = () => run(done || left <= 0 ? total : left)
+  const start = () => { unlockAudio(); run(done || left <= 0 ? total : left) }
   const pause = () => { setRunning(false); setPaused(true) }
   const reset = () => { setRunning(false); setDone(false); setPaused(false); setLeft(total) }
   const choose = (s) => { setTotal(s); setLeft(s); setRunning(false); setDone(false); setPaused(false) }
@@ -82,7 +93,13 @@ export default function RestTimer() {
   return (
     <div className={`card h-100 timer timer-${state}`}>
       <div className="card-body p-3">
-        <h2 className="stat-label stat-ic mb-2"><Timer size={14} aria-hidden="true" />Descanso entre series</h2>
+        <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <h2 className="stat-label stat-ic mb-0"><Timer size={14} aria-hidden="true" />Descanso entre series</h2>
+          <button type="button" className="btn btn-sm btn-outline-secondary timer-sound" onClick={toggleSound} aria-pressed={sound}
+            aria-label={sound ? 'Sonido activado' : 'Sonido desactivado'} title={sound ? 'Silenciar el aviso' : 'Activar el aviso sonoro'}>
+            {sound ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
+          </button>
+        </div>
         <span className="visually-hidden" role="status">{announce}</span>
         <div className="timer-body">
           <div className="timer-ring" role="timer" aria-label={`Descanso restante: ${fmt(left)}`}>

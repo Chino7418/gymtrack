@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react'
 import RestTimer from './RestTimer'
+import { beep } from '../lib/beep'
+
+vi.mock('../lib/beep', () => ({ beep: vi.fn(), unlockAudio: vi.fn() }))
 
 const KEY = 'gymtrack.restTimer'
 const NOW = new Date('2026-01-01T10:00:00Z').getTime()
@@ -165,5 +168,29 @@ describe('RestTimer: +15 en reposo', () => {
     expect(caption()).toBe('listo')
     expect(screen.getByRole('button', { name: /Iniciar/ })).toBeTruthy()
     expect(guardado().total).toBe(105)
+  })
+})
+
+describe('RestTimer: sonido', () => {
+  it('suena al terminar el descanso si el sonido está activado', () => {
+    vi.mocked(beep).mockClear()
+    render(<RestTimer />)
+    click('30s, 30 segundos')
+    click(/Iniciar/)
+    avanzar(31000)
+    expect(caption()).toBe('¡A la serie!')
+    expect(beep).toHaveBeenCalledTimes(1)
+  })
+
+  it('no suena si el usuario lo silenció, y la preferencia se guarda', () => {
+    render(<RestTimer />)
+    click('Sonido activado')
+    expect(localStorage.getItem('unamas.timerSound')).toBe('off')
+    vi.mocked(beep).mockClear()
+    click('30s, 30 segundos')
+    click(/Iniciar/)
+    avanzar(31000)
+    expect(beep).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Sonido desactivado' })).toBeTruthy()
   })
 })

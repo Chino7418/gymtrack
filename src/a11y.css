@@ -98,3 +98,4 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 .quick-preview { font-variant-numeric: tabular-nums; }
 .quick-field .form-control[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
 .text-danger-emphasis { color: var(--danger-text) !important; }
+.timer-sound { padding: 0.25rem 0.5rem; line-height: 1; }

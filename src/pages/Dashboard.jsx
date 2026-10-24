@@ -6,7 +6,8 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import RestTimer from '../components/RestTimer'
-import { Scale, Target, Flame, Plus } from 'lucide-react'
+import { Scale, Target, Flame, Plus, Trophy, Medal, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { weightTrend } from '../lib/progress'
 import './dashboard.css'
 
 export default function Dashboard() {
@@ -55,13 +56,13 @@ export default function Dashboard() {
   const prev = data.previous ? Number(data.previous[C.weightValue]) : null
   const goal = data.goal != null ? Number(data.goal) : null
   const diff = cur != null && goal != null ? goal - cur : null
-  const change = cur != null && prev != null ? cur - prev : null
+  const trend = weightTrend(cur, prev, goal)
+  const TrendIcon = { goal: Medal, award: Trophy, down: TrendingDown, up: TrendingUp, away: cur > prev ? TrendingUp : TrendingDown, same: Minus }[trend?.kind]
 
-  const pesoSub = cur == null ? 'Registrar'
-    : `${dayjs(data.current[C.weightDate]).format('DD/MM')}${change ? ` · ${change > 0 ? '+' : ''}${change.toFixed(1)}` : ''}`
+  const pesoSub = cur == null ? 'Registrar' : dayjs(data.current[C.weightDate]).format('DD/MM')
   const objSub = goal == null ? 'Definir'
     : diff == null ? 'Cambiar'
-    : Math.abs(diff) < 0.05 ? '¡Logrado!' : `Faltan ${Math.abs(diff).toFixed(1)} kg`
+    : Math.abs(diff) < 0.05 ? '¡Logrado! 🏅' : `Faltan ${Math.abs(diff).toFixed(1)} kg`
 
   return (
     <>
@@ -74,6 +75,11 @@ export default function Dashboard() {
             <span className="stat-label stat-ic"><Scale size={14} aria-hidden="true" />Peso</span>
             <span className="stat-value">{cur ?? '—'}{cur != null && <small>kg</small>}</span>
             <span className="stat-sub">{pesoSub}</span>
+            {trend && (
+              <span className={`weight-badge wb-${trend.kind}`} role="img" aria-label={trend.label} title={trend.label}>
+                <TrendIcon size={12} aria-hidden="true" />{trend.text}
+              </span>
+            )}
           </Link>
         </div>
         <div className="col-4">
