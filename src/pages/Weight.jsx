@@ -36,7 +36,7 @@ export default function Weight() {
   const add = async (e) => {
     e.preventDefault(); setError('')
     const n = Number(value)
-    if (!(n > 0 && n < 500)) return setError('Ingresá un peso entre 1 y 499 kg')
+    if (!(n > 0 && n < 500)) return setError('Ingresá un peso mayor a 0 y menor a 500 kg')
     if (dayjs(date).isAfter(dayjs(), 'day')) return setError('La fecha no puede ser futura')
     const { error } = await supabase.from(T.weights).insert({ user_id: user.id, [C.weightValue]: n, [C.weightDate]: date })
     if (error) return setError(error.message)

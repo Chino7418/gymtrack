@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
-import ExercisePicker from '../components/ExercisePicker'
+import ExercisePicker, { norm } from '../components/ExercisePicker'
 import ConfirmButton from '../components/ConfirmButton'
 import TrainingTabs from '../components/TrainingTabs'
 
@@ -29,7 +29,7 @@ export default function Exercises() {
     e.preventDefault(); setError('')
     if (!form.name.trim()) return setError('El nombre es obligatorio')
     if (!form.muscle_group) return setError('Elegí un grupo muscular')
-    if (list.some((x) => x.id !== form.id && x.name.trim().toLowerCase() === form.name.trim().toLowerCase()))
+    if (list.some((x) => x.id !== form.id && norm(x.name) === norm(form.name)))
       return setError('Ya tenés un ejercicio con ese nombre')
     const row = { name: form.name.trim(), muscle_group: form.muscle_group, description: form.description.trim() || null }
     const { error } = form.id

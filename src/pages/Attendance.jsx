@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
-import { T } from '../lib/schema'
+import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 
@@ -25,9 +25,11 @@ export default function Attendance() {
     setError(''); setSaving(date)
     const found = rows.find((r) => r.attendance_date === date)
     const { error } = found
-      ? await supabase.from(T.attendances).delete().eq('attendance_date', date) // todas las filas del día (RLS limita al usuario)
+      ? await supabase.from(T.attendances).delete().eq(C.attendanceDate, date) // todas las filas del día (RLS limita al usuario)
       : await supabase.from(T.attendances).insert({ user_id: user.id, attendance_date: date })
-    if (error) setError(error.message); else await load()
+    // 23505: el día ya estaba registrado (otra pestaña o un entrenamiento recién guardado)
+    if (error && error.code !== '23505') setError(error.message)
+    await load()
     setSaving(null)
   }
 

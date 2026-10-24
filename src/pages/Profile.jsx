@@ -38,8 +38,8 @@ export default function Profile() {
     e.preventDefault(); setError(''); setOk(false)
     if (!f.first_name.trim() || !f.last_name.trim() || !f.username.trim()) return setError('Nombre, apellido y usuario son obligatorios')
     if (f.birth_date && dayjs(f.birth_date).isAfter(dayjs(), 'day')) return setError('La fecha de nacimiento no puede ser futura')
-    if (f.height_cm !== '' && (Number(f.height_cm) <= 0 || Number(f.height_cm) >= 300)) return setError('La altura debe estar entre 1 y 299 cm')
-    if (f.goal_weight_kg !== '' && (Number(f.goal_weight_kg) <= 0 || Number(f.goal_weight_kg) >= 500)) return setError('El objetivo debe estar entre 1 y 499 kg')
+    if (f.height_cm !== '' && (Number(f.height_cm) <= 0 || Number(f.height_cm) >= 300)) return setError('La altura tiene que ser mayor a 0 y menor a 300 cm')
+    if (f.goal_weight_kg !== '' && (Number(f.goal_weight_kg) <= 0 || Number(f.goal_weight_kg) >= 500)) return setError('El objetivo tiene que ser mayor a 0 y menor a 500 kg')
     const { error } = await supabase.from(T.profiles).update({
       first_name: f.first_name.trim(), last_name: f.last_name.trim(), username: f.username.trim(),
       birth_date: f.birth_date || null,

@@ -6,7 +6,8 @@ import PasswordInput from '../components/PasswordInput'
 import { traducir } from '../lib/errores'
 
 function Shell({ title, children, guest = true }) {
-  const { session } = useAuth()
+  const { session, loading } = useAuth()
+  if (guest && loading) return null
   if (guest && session) return <Navigate to="/" replace />
   return (
     <main className="container" style={{ maxWidth: 420 }}>

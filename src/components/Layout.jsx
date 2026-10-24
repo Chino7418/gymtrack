@@ -53,7 +53,7 @@ function Layout() {
             <ul className="navbar-nav me-auto">
               {LINKS.map(([to, label, Icon]) => (
                 <li className="nav-item" key={to}>
-                  <NavLink end={to === '/'} to={to} className="nav-link d-flex align-items-center gap-2"><Icon size={18} aria-hidden="true" />{label}</NavLink>
+                  <NavLink end={to === '/'} to={to} className={({ isActive }) => `nav-link d-flex align-items-center gap-2 ${isActive || (to === '/workouts' && pathname.startsWith('/exercises')) ? 'active' : ''}`}><Icon size={18} aria-hidden="true" />{label}</NavLink>
                 </li>
               ))}
             </ul>

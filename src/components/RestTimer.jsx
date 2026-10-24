@@ -30,10 +30,12 @@ export default function RestTimer() {
   const [running, setRunning] = useState(init.running)
   const [done, setDone] = useState(init.done)
   const [endAt, setEndAt] = useState(init.endAt)
+  // Pausa explícita: con +15 el restante puede superar la duración elegida y no alcanza con comparar números
+  const [paused, setPaused] = useState(init.paused ?? (!init.running && !init.done && init.left > 0 && init.left < init.total))
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify({ total, left, running, done, endAt })) } catch { /* sin storage */ }
-  }, [total, running, done, endAt, running ? 0 : left])
+    try { localStorage.setItem(KEY, JSON.stringify({ total, left, running, done, endAt, paused })) } catch { /* sin storage */ }
+  }, [total, running, done, endAt, paused, running ? 0 : left])
 
   useEffect(() => {
     if (!running) return
@@ -41,7 +43,7 @@ export default function RestTimer() {
       const rem = (endAt - Date.now()) / 1000
       if (rem <= 0) {
         clearInterval(id)
-        setLeft(0); setRunning(false); setDone(true)
+        setLeft(0); setRunning(false); setDone(true); setPaused(false)
         navigator.vibrate?.([300, 150, 300, 150, 300])
       } else setLeft(rem)
     }, 200)
@@ -56,21 +58,22 @@ export default function RestTimer() {
   // Ignora el segundo toque de un doble clic: el botón cambia de Iniciar a Pausar bajo el dedo
   const lastTap = useRef(0)
   const once = (fn) => () => { const now = Date.now(); if (now - lastTap.current < 400) return; lastTap.current = now; fn() }
-  const run = (secs) => { setDone(false); setLeft(secs); setEndAt(Date.now() + secs * 1000); setRunning(true) }
+  const run = (secs) => { setDone(false); setPaused(false); setLeft(secs); setEndAt(Date.now() + secs * 1000); setRunning(true) }
   const start = () => run(done || left <= 0 ? total : left)
-  const pause = () => setRunning(false)
-  const reset = () => { setRunning(false); setDone(false); setLeft(total) }
-  const choose = (s) => { setTotal(s); setLeft(s); setRunning(false); setDone(false) }
+  const pause = () => { setRunning(false); setPaused(true) }
+  const reset = () => { setRunning(false); setDone(false); setPaused(false); setLeft(total) }
+  const choose = (s) => { setTotal(s); setLeft(s); setRunning(false); setDone(false); setPaused(false) }
+  // En reposo +15 alarga la duración elegida; corriendo o en pausa, el descanso actual
   const plus = () => {
     if (done) return run(15)
     if (running) setEndAt(endAt + 15000)
+    else if (!paused) setTotal(total + 15)
     setLeft(left + 15)
   }
 
   // El anillo se vacía a medida que pasa el descanso
   const frac = left > 0 ? Math.min(1, left / Math.max(total, left)) : 0
   const state = done ? 'done' : running ? 'run' : 'idle'
-  const paused = !running && !done && left > 0 && left !== total
   const caption = done ? '¡A la serie!' : running ? 'descansando' : paused ? 'en pausa' : 'listo'
   // Solo se anuncian los cambios de estado, no cada segundo
   const announce = done ? 'Descanso terminado. ¡A la próxima serie!' : running ? 'Descanso iniciado' : paused ? 'Descanso en pausa' : ''

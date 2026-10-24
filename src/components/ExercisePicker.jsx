@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { CATEGORIAS, ejerciciosPorCategoria } from '../lib/wger'
 import { ErrorMsg } from './Layout'
 
-export const norm = (s) => s.trim().toLowerCase()
+export const norm = (s) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const MIOS = 'mine'
 
 // Buscador de ejercicios: "Mis ejercicios" (opcional) + categorías del catálogo wger.

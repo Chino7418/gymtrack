@@ -16,4 +16,5 @@ export const C = {
   exerciseGroup: 'muscle_group',
   weightValue: 'weight_kg',
   weightDate: 'recorded_date',
+  attendanceDate: 'attendance_date',
 }

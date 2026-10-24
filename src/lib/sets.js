@@ -7,12 +7,13 @@ const round = (n) => Math.round(n * 2) / 2 // a 0,5 kg
 const num = (v) => (v === '' || v == null ? NaN : Number(v))
 
 // { series, reps, min, max } → [{ weight_kg, reps, notes }]. Sin máximo: todas con el mínimo.
-// Con máximo, el peso sube parejo de la primera a la última serie (pirámide).
+// Con máximo, el peso sube parejo de la primera a la última serie (pirámide, redondeo a 0,5 kg).
+// Sin pirámide se respeta el peso tal cual (por ejemplo 21,25 kg con discos de 1,25).
 export function buildSets({ series, reps, min, max }) {
   const n = num(series), r = num(reps), lo = num(min)
   const hi = Number.isNaN(num(max)) ? lo : num(max)
   return Array.from({ length: n }, (_, i) => ({
-    weight_kg: n === 1 ? lo : round(lo + ((hi - lo) * i) / (n - 1)),
+    weight_kg: n === 1 || hi === lo ? lo : round(lo + ((hi - lo) * i) / (n - 1)),
     reps: r,
     notes: '',
   }))
@@ -31,7 +32,7 @@ export function quickError({ series, reps, min, max }) {
 // Series → carga rápida, o null si no se pueden expresar así
 // (repeticiones distintas, notas por serie o pesos que no siguen la pirámide).
 export function summarize(sets) {
-  if (!sets?.length) return null
+  if (!sets?.length || sets.some((s) => s.reps === '' || s.weight_kg === '')) return null
   const reps = Number(sets[0].reps)
   if (sets.some((s) => Number(s.reps) !== reps || s.notes)) return null
   const lo = Number(sets[0].weight_kg), hi = Number(sets.at(-1).weight_kg)

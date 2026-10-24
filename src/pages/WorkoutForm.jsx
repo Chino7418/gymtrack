@@ -42,8 +42,10 @@ export default function WorkoutForm() {
       if (ex.error) setError(ex.error.message); else setCatalog(ex.data)
       if (id) {
         const { data, error } = await supabase.from(T.workouts)
-          .select(`*, ${T.workoutExercises}(*, ${T.workoutSets}(*))`).eq('id', id).single()
-        if (error) setNotFound(true)
+          .select(`*, ${T.workoutExercises}(*, ${T.workoutSets}(*))`).eq('id', id).maybeSingle()
+        // Un id con formato inválido devuelve 22P02: también es "no encontrado"
+        if (error && error.code !== '22P02') setError(error.message)
+        else if (!data) setNotFound(true)
         else {
           setName(data.name); setDate(data.workout_date); setNotes(data.notes ?? '')
           setItems([...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => {
@@ -67,8 +69,11 @@ export default function WorkoutForm() {
   }
   // Rápido → detallado: genera las series para poder corregir una por una
   const toDetail = (i) => {
-    const it = items[i]
-    upd(i, { mode: 'detail', sets: quickError(it.quick) ? (it.sets.length ? it.sets : [emptySet()]) : buildSets(it.quick) })
+    const { quick: q } = items[i]
+    // Si la carga rápida está incompleta, se precarga lo que haya (peso mínimo y reps en cada serie)
+    const n = Math.min(Math.max(parseInt(q.series, 10) || 1, 1), 20)
+    const sets = quickError(q) ? Array.from({ length: n }, () => ({ weight_kg: q.min, reps: q.reps, notes: '' })) : buildSets(q)
+    upd(i, { mode: 'detail', sets })
   }
   const toQuick = (i) => upd(i, { mode: 'quick', quick: summarize(items[i].sets) })
 
@@ -125,8 +130,8 @@ export default function WorkoutForm() {
       } else {
         if (it.sets.length === 0) return setError(`${exName(it.exercise_id)}: agregá al menos una serie`)
         for (const s of it.sets) {
-          if (s.reps === '' || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
-            return setError(`Revisá las series de ${exName(it.exercise_id)}: peso y repeticiones son obligatorios (mínimo 1 repetición, sin negativos)`)
+          if (s.reps === '' || !Number.isInteger(Number(s.reps)) || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
+            return setError(`Revisá las series de ${exName(it.exercise_id)}: peso y repeticiones son obligatorios (repeticiones enteras desde 1, peso sin negativos)`)
         }
       }
     }
@@ -141,7 +146,8 @@ export default function WorkoutForm() {
     // La función save_workout inserta la asistencia sin chequear duplicados: solo se pide si ese día no tiene
     let record = attend
     if (record) {
-      const { count } = await supabase.from(T.attendances).select('id', { count: 'exact', head: true }).eq('attendance_date', date)
+      const { count, error: attErr } = await supabase.from(T.attendances).select('id', { count: 'exact', head: true }).eq(C.attendanceDate, date)
+      if (attErr) { setSaving(false); return setError(attErr.message) }
       record = !count
     }
     const { error } = await supabase.rpc('save_workout', {
@@ -157,6 +163,7 @@ export default function WorkoutForm() {
   if (notFound) return (
     <>
       <h1 className="h4 mb-3">Entrenamiento no encontrado</h1>
+      <ErrorMsg error={error} />
       <p className="text-muted">Puede que se haya borrado o que el enlace esté mal.</p>
       <button type="button" className="btn btn-primary" onClick={() => nav('/workouts')}>Ver mis entrenamientos</button>
     </>
