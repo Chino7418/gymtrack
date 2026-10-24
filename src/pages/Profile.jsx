@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ListChecks, LogOut, ChevronRight } from 'lucide-react'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
-import { ErrorMsg } from '../components/Layout'
+import { ErrorMsg, ThemeToggle } from '../components/Layout'
 
 const categoria = (imc) => (imc < 18.5 ? 'Bajo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidad')
 
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const [f, setF] = useState({ first_name: '', last_name: '', username: '', birth_date: '', height_cm: '', goal_weight_kg: '' })
   const [weight, setWeight] = useState(null)
   const [error, setError] = useState('')
@@ -99,6 +101,25 @@ export default function Profile() {
                 : 'Cargá tu altura y registrá tu peso para ver tu IMC.'}
             </p>
           </div>
+        </div>
+
+        <div className="col-12">
+          <section className="card" aria-labelledby="ajustes">
+            <div className="card-body p-3">
+              <h2 id="ajustes" className="h6 text-muted mb-2">Ajustes</h2>
+              <div className="settings">
+                <Link to="/exercises" className="settings-row">
+                  <ListChecks size={20} aria-hidden="true" /><span>Mis ejercicios</span><ChevronRight size={18} className="ms-auto text-muted" aria-hidden="true" />
+                </Link>
+                <div className="settings-row">
+                  <span className="me-auto">Tema</span><ThemeToggle />
+                </div>
+                <button type="button" className="settings-row text-danger-emphasis" onClick={signOut}>
+                  <LogOut size={20} aria-hidden="true" /><span>Cerrar sesión</span>
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </>

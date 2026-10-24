@@ -14,14 +14,23 @@ const LINKS = [
   ['/', 'Inicio', House], ['/workouts', 'Entrenamientos', Dumbbell], ['/exercises', 'Ejercicios', ListChecks],
   ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound],
 ]
-// Barra inferior en celular (Peso queda en el menú y en la tarjeta del Inicio)
-const TABS = [['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell], ['/exercises', 'Ejercicios', ListChecks], ['/attendance', 'Asistencia', CalendarCheck], ['/profile', 'Perfil', UserRound]]
+// Barra inferior en celular. Tema, cerrar sesión y "Mis ejercicios" están en Perfil.
+const TABS = [['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell], ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound]]
+const TEXT_FIELD = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select'
 
 function Layout() {
   const { signOut } = useAuth()
-  const [open, setOpen] = useState(false)
-  const close = () => setOpen(false)
+  const [typing, setTyping] = useState(false)
   const { pathname } = useLocation()
+
+  // Con el teclado abierto la barra inferior sube y tapa el campo: se oculta mientras se escribe
+  useEffect(() => {
+    const onIn = (e) => { if (e.target.matches?.(TEXT_FIELD)) setTyping(true) }
+    const onOut = () => setTimeout(() => setTyping(!!document.activeElement?.matches?.(TEXT_FIELD)), 0)
+    document.addEventListener('focusin', onIn)
+    document.addEventListener('focusout', onOut)
+    return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut) }
+  }, [])
   const first = useRef(true)
 
   // Al cambiar de página: título de la pestaña y foco en el h1 (para lectores de pantalla)
@@ -39,14 +48,12 @@ function Layout() {
       <nav className="navbar navbar-expand-md app-navbar">
         <div className="container">
           <span className="navbar-brand fw-bold d-flex align-items-center gap-2"><img src="/icon.svg" alt="" width="30" height="30" />Una Más</span>
-          <button className="navbar-toggler" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="nav" aria-label="Menú">
-            <span className="navbar-toggler-icon" />
-          </button>
-          <div className={`collapse navbar-collapse ${open ? 'show' : ''}`} id="nav">
+          {/* En celular la navegación es la barra inferior; este menú solo se ve desde tablet */}
+          <div className="collapse navbar-collapse" id="nav">
             <ul className="navbar-nav me-auto">
               {LINKS.map(([to, label, Icon]) => (
                 <li className="nav-item" key={to}>
-                  <NavLink end={to === '/'} to={to} className="nav-link d-flex align-items-center gap-2" onClick={close}><Icon size={18} aria-hidden="true" />{label}</NavLink>
+                  <NavLink end={to === '/'} to={to} className="nav-link d-flex align-items-center gap-2"><Icon size={18} aria-hidden="true" />{label}</NavLink>
                 </li>
               ))}
             </ul>
@@ -58,9 +65,9 @@ function Layout() {
         </div>
       </nav>
       <main id="main" className="container py-4 flex-grow-1 has-tabbar"><Outlet /></main>
-      <nav className="tabbar d-md-none" aria-label="Secciones">
+      <nav className={`tabbar d-md-none ${typing ? 'tabbar-hidden' : ''}`} aria-label="Secciones">
         {TABS.map(([to, label, Icon]) => (
-          <NavLink key={to} end={to === '/'} to={to} className="tab" onClick={close}>
+          <NavLink key={to} end={to === '/'} to={to} className="tab">
             <span className="tab-pill"><Icon size={20} aria-hidden="true" /></span>{label}
           </NavLink>
         ))}
