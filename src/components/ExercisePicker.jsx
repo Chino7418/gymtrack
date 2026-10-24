@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CATEGORIAS, ejerciciosPorCategoria } from '../lib/wger'
 import { ErrorMsg } from './Layout'
+import { grupoLabel } from '../lib/muscles'
 
 export const norm = (s) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const MIOS = 'mine'
@@ -28,7 +29,8 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
     return () => { alive = false }
   }, [cat])
 
-  const pick = async (x) => { setPicking(x.id); await onPick(x); setPicking(null) }
+  const [lastAdded, setLastAdded] = useState('')
+  const pick = async (x) => { setPicking(x.id); const ok = await onPick(x); setPicking(null); if (ok !== false) setLastAdded(x.name) }
   const added = new Set(mine.map((x) => norm(x.name)))
   const source = cat === MIOS ? mine.filter((x) => x.is_active !== false) : items
   const shown = source.filter((x) => norm(x.name).includes(norm(q)) && (!onlyImg || x.thumb))
@@ -43,6 +45,7 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
         {CATEGORIAS.map((c) => chip(c.id, c.label))}
       </div>
       <ErrorMsg error={error} />
+      {lastAdded && <p className="small text-success-emphasis mb-2" role="status">Agregado: {lastAdded}. Podés seguir sumando ejercicios.</p>}
       {cat == null ? <p className="text-muted small mb-0">Elegí una categoría para ver ejercicios.</p> : busy ? <p className="mb-0" role="status">Cargando…</p> : (
         <>
           <input type="search" className="form-control mb-2" placeholder="Filtrar por nombre…" aria-label="Filtrar ejercicios por nombre" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -65,7 +68,7 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
                         : <span className="ex-thumb ex-thumb-empty">{x.name[0]}</span>}
                       <span className="min-w-0">
                         <span className="d-block text-truncate" lang={x.spanish === false ? 'en' : undefined}>{x.name}{x.spanish === false && <small className="text-muted ms-1">(EN)</small>}</span>
-                        <small className="text-muted d-block text-truncate">{x.muscle_group}{x.equipment && ` · ${x.equipment}`}</small>
+                        <small className="text-muted d-block text-truncate">{grupoLabel(x.muscle_group)}{x.equipment && ` · ${x.equipment}`}</small>
                       </span>
                     </button>
                     {markAdded && added.has(norm(x.name))

@@ -44,7 +44,7 @@ export default function Dashboard() {
   const saveGoal = async (e) => {
     e.preventDefault(); setError('')
     const n = Number(goalInput)
-    if (!(n > 0 && n < 500)) return setError('Ingresá un objetivo entre 1 y 499 kg')
+    if (!(n >= 20 && n <= 400)) return setError('Ingresá un objetivo entre 20 y 400 kg')
     const { error } = await supabase.from(T.profiles).update({ goal_weight_kg: n }).eq('id', user.id)
     if (error) return setError(error.message)
     setEditing(false); load()

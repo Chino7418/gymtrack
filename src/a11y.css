@@ -96,3 +96,5 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 .quick-field .form-control { padding-inline: 0.5rem; text-align: center; font-variant-numeric: tabular-nums; }
 .quick-sep { padding-bottom: 0.55rem; color: var(--muted); font-weight: 700; }
 .quick-preview { font-variant-numeric: tabular-nums; }
+.quick-field .form-control[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.text-danger-emphasis { color: var(--danger-text) !important; }

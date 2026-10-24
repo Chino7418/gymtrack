@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import ConfirmButton from '../components/ConfirmButton'
+import { GRUPOS, grupoLabel } from '../lib/muscles'
 import TrainingTabs from '../components/TrainingTabs'
 
-const GRUPOS = ['Pecho', 'Espalda', 'Hombros', 'Biceps', 'Triceps', 'Piernas', 'Gluteos', 'Abdomen', 'Otro']
 const VACIO = { id: null, name: '', muscle_group: '', description: '' }
 
 export default function Exercises() {
@@ -42,7 +42,7 @@ export default function Exercises() {
     setError('')
     const { error } = await supabase.from(T.exercises)
       .insert({ name: x.name, muscle_group: x.muscle_group, description: x.description, user_id: user.id })
-    if (error) return setError(error.message)
+    if (error) { setError(error.message); return false }
     load()
   }
   const del = async (id) => {
@@ -74,7 +74,7 @@ export default function Exercises() {
               <label className="form-label" htmlFor="ex-group">Grupo muscular</label>
               <select id="ex-group" className="form-select" required value={form.muscle_group} onChange={(e) => setForm({ ...form, muscle_group: e.target.value })}>
                 <option value="">Elegir…</option>
-                {GRUPOS.map((g) => <option key={g} value={g}>{g}</option>)}
+                {GRUPOS.map((g) => <option key={g} value={g}>{grupoLabel(g)}</option>)}
               </select>
             </div>
             <div className="col-12 col-md-5"><label className="form-label" htmlFor="ex-desc">Descripción <span className="text-muted small">(opcional)</span></label><input id="ex-desc" className="form-control" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
@@ -91,7 +91,7 @@ export default function Exercises() {
         <ul className="list-group">
           {list.map((x) => (
             <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
-              <span className="min-w-0 text-truncate">{x.name} <small className="text-muted ms-2">{x.muscle_group}</small></span>
+              <span className="min-w-0 text-truncate">{x.name} <small className="text-muted ms-2">{grupoLabel(x.muscle_group)}</small></span>
               <span className="d-flex gap-2 flex-none">
                 <button className="btn btn-sm btn-outline-primary" onClick={() => edit(x)} aria-label={`Editar ${x.name}`}>Editar</button>
                 <ConfirmButton what={x.name} onConfirm={() => del(x.id)} />

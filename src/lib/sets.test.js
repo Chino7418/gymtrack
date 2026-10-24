@@ -1,5 +1,5 @@
 import { describe as suite, it, expect } from 'vitest'
-import { buildSets, quickError, summarize, describe, MAX_SERIES } from './sets'
+import { buildSets, quickError, quickIssue, summarize, describe, MAX_SERIES } from './sets'
 
 const pesos = (sets) => sets.map((s) => s.weight_kg)
 
@@ -77,11 +77,14 @@ suite('quickError', () => {
     expect(quickError({ ...ok, min: '0', max: '' })).toBe('')
   })
 
-  it('rechaza peso mínimo vacío, indefinido o negativo', () => {
+  it('rechaza peso mínimo vacío o indefinido', () => {
     const msg = 'falta el peso (0 si es sin peso)'
     expect(quickError({ ...ok, min: '' })).toBe(msg)
-    expect(quickError({ ...ok, min: '-1' })).toBe(msg)
     expect(quickError({ ...ok, min: undefined })).toBe(msg)
+  })
+
+  it('rechaza peso mínimo negativo con un mensaje propio', () => {
+    expect(quickError({ ...ok, min: '-1' })).toBe('el peso no puede ser negativo')
   })
 
   it('rechaza un máximo menor que el mínimo', () => {
@@ -171,5 +174,22 @@ suite('casos de la revisión de código', () => {
   it('summarize devuelve null si una serie tiene peso o reps vacíos', () => {
     expect(summarize([{ weight_kg: '', reps: '', notes: '' }])).toBeNull()
     expect(summarize([{ weight_kg: 40, reps: 10, notes: '' }, { weight_kg: '', reps: 10, notes: '' }])).toBeNull()
+  })
+})
+
+suite('quickIssue', () => {
+  const ok = { series: '4', reps: '10', min: '30', max: '45' }
+  it('devuelve null si la carga rápida es válida', () => {
+    expect(quickIssue(ok)).toBeNull()
+  })
+  it('señala el campo con problema', () => {
+    expect(quickIssue({ ...ok, series: '0' }).field).toBe('series')
+    expect(quickIssue({ ...ok, reps: '8.5' }).field).toBe('reps')
+    expect(quickIssue({ ...ok, min: '' }).field).toBe('min')
+    expect(quickIssue({ ...ok, min: '-5' }).field).toBe('min')
+    expect(quickIssue({ ...ok, max: '20' }).field).toBe('max')
+  })
+  it('informa el primer problema en orden: series, reps, peso', () => {
+    expect(quickIssue({ series: '', reps: '', min: '', max: '' }).field).toBe('series')
   })
 })

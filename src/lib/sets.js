@@ -19,15 +19,20 @@ export function buildSets({ series, reps, min, max }) {
   }))
 }
 
-// Mensaje de error, o '' si la carga rápida es válida
-export function quickError({ series, reps, min, max }) {
+// Primer problema de la carga rápida: { field, message }, o null si es válida.
+// field ('series' | 'reps' | 'min' | 'max') sirve para marcar el campo en la interfaz.
+export function quickIssue({ series, reps, min, max }) {
   const n = num(series), r = num(reps), lo = num(min), hi = num(max)
-  if (!Number.isInteger(n) || n < 1 || n > MAX_SERIES) return `las series tienen que ser un número entre 1 y ${MAX_SERIES}`
-  if (!Number.isInteger(r) || r < 1) return 'las repeticiones tienen que ser un número entero desde 1'
-  if (Number.isNaN(lo) || lo < 0) return 'falta el peso (0 si es sin peso)'
-  if (!Number.isNaN(hi) && hi < lo) return 'el peso máximo no puede ser menor que el mínimo'
-  return ''
+  if (!Number.isInteger(n) || n < 1 || n > MAX_SERIES) return { field: 'series', message: `las series tienen que ser un número entre 1 y ${MAX_SERIES}` }
+  if (!Number.isInteger(r) || r < 1) return { field: 'reps', message: 'las repeticiones tienen que ser un número entero desde 1' }
+  if (Number.isNaN(lo)) return { field: 'min', message: 'falta el peso (0 si es sin peso)' }
+  if (lo < 0) return { field: 'min', message: 'el peso no puede ser negativo' }
+  if (!Number.isNaN(hi) && hi < lo) return { field: 'max', message: 'el peso máximo no puede ser menor que el mínimo' }
+  return null
 }
+
+// Mensaje de error, o '' si la carga rápida es válida
+export const quickError = (q) => quickIssue(q)?.message ?? ''
 
 // Series → carga rápida, o null si no se pueden expresar así
 // (repeticiones distintas, notas por serie o pesos que no siguen la pirámide).

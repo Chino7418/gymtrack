@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
-import { buildSets, quickError, summarize, describe } from '../lib/sets'
+import { buildSets, quickError, quickIssue, summarize, describe } from '../lib/sets'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
@@ -110,11 +110,10 @@ export default function WorkoutForm() {
   const addExercise = async (x) => {
     setError('')
     const ex = await ensureExercise(x)
-    if (!ex) return
+    if (!ex) return false
     const prev = await lastSets(ex.id)
     // Se precarga lo de la última vez; si es la primera, carga rápida vacía
     setItems((list) => [...list, prev?.sets.length ? toItem(ex.id, prev.sets, { prev }) : { ...toItem(ex.id, []), mode: 'quick', quick: emptyQuick() }])
-    setPicking(false)
   }
   const exName = (exId) => catalog.find((c) => c.id === exId)?.[C.exerciseName] ?? 'Ejercicio'
 
@@ -182,7 +181,11 @@ export default function WorkoutForm() {
 
       {items.map((it, i) => {
         const exLabel = exName(it.exercise_id)
+        // Error en vivo solo para un valor cargado que es inválido; un campo todavía vacío no es error
+        const found = it.mode === 'quick' ? quickIssue(it.quick) : null
+        const issue = found && it.quick[found.field] !== '' ? found : null
         const preview = it.mode === 'quick' && !quickError(it.quick) ? buildSets(it.quick) : null
+        const inv = (f) => (issue?.field === f ? true : undefined)
         return (
           <section className="card mb-3" key={i} aria-labelledby={`ex-${i}`}>
             <div className="card-body p-3">
@@ -198,19 +201,21 @@ export default function WorkoutForm() {
                 <>
                   <div className="quick-row" role="group" aria-label={`Carga rápida de ${exLabel}`}>
                     <label className="quick-field"><span>Series</span>
-                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" max="20" className="form-control" placeholder="4" value={it.quick.series} onChange={(e) => updQuick(i, { series: e.target.value })} /></label>
+                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" max="20" className="form-control" placeholder="4" aria-invalid={inv('series')} aria-describedby={`qhint-${i}`} value={it.quick.series} onChange={(e) => updQuick(i, { series: e.target.value })} /></label>
                     <span className="quick-sep" aria-hidden="true">×</span>
                     <label className="quick-field"><span>Reps</span>
-                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" placeholder="10" value={it.quick.reps} onChange={(e) => updQuick(i, { reps: e.target.value })} /></label>
+                      <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" placeholder="10" aria-invalid={inv('reps')} aria-describedby={`qhint-${i}`} value={it.quick.reps} onChange={(e) => updQuick(i, { reps: e.target.value })} /></label>
                     <span className="quick-sep" aria-hidden="true">·</span>
                     <label className="quick-field"><span>Kg mín.</span>
-                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="30" value={it.quick.min} onChange={(e) => updQuick(i, { min: e.target.value })} /></label>
+                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="30" aria-invalid={inv('min')} aria-describedby={`qhint-${i}`} value={it.quick.min} onChange={(e) => updQuick(i, { min: e.target.value })} /></label>
                     <span className="quick-sep" aria-hidden="true">–</span>
                     <label className="quick-field"><span>Kg máx.</span>
-                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="—" aria-describedby={`qhint-${i}`} value={it.quick.max} onChange={(e) => updQuick(i, { max: e.target.value })} /></label>
+                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="—" aria-invalid={inv('max')} aria-describedby={`qhint-${i}`} value={it.quick.max} onChange={(e) => updQuick(i, { max: e.target.value })} /></label>
                   </div>
-                  <p id={`qhint-${i}`} className="quick-preview small text-muted mb-2" aria-live="polite">
-                    {preview ? `Series: ${preview.map((s) => s.weight_kg).join(' · ')} kg × ${it.quick.reps}` : 'Completá series, repeticiones y peso. El máximo es opcional: si lo ponés, el peso sube parejo serie a serie.'}
+                  <p id={`qhint-${i}`} className={`quick-preview small mb-2 ${issue ? 'text-danger-emphasis' : 'text-muted'}`} aria-live="polite">
+                    {preview ? `Series: ${preview.map((s) => s.weight_kg).join(' · ')} kg × ${it.quick.reps}`
+                      : issue ? issue.message[0].toUpperCase() + issue.message.slice(1)
+                      : 'Completá series, repeticiones y peso. El máximo es opcional: si lo ponés, el peso sube parejo serie a serie.'}
                   </p>
                 </>
               ) : (
