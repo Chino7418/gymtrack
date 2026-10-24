@@ -2,6 +2,8 @@
 
 Aplicación web para registrar entrenamientos, ejercicios, asistencia y peso corporal. Desarrollada con React + Vite + Bootstrap 5 + Supabase + PostgreSQL.
 
+El catálogo de ejercicios sale de la API pública de [wger.de](https://wger.de) (no necesita key). La interfaz tiene tema claro y oscuro (automático según el sistema, o a elección en Perfil).
+
 ## 1. Instalación
 
 ```bash
@@ -18,11 +20,15 @@ npm install
 
 ## 3. Migraciones
 
-Ejecutar las migraciones SQL en Supabase SQL Editor (o CLI):
+Ejecutá las migraciones SQL en Supabase SQL Editor (o CLI):
 - `supabase/migrations/20261013184700_init_schema.sql`
 - `supabase/migrations/20261013184800_rls_policies.sql`
 - `supabase/migrations/20261013184900_profile_trigger.sql`
 - `supabase/migrations/20261013185000_rpc_save_workout.sql`
+- `supabase/migrations/20261020000000_goal_weight.sql`
+- `supabase/migrations/20261024000000_attendance_unique.sql`
+
+Aplicalas en ese orden.
 
 ## 4. Autenticación
 
@@ -32,6 +38,18 @@ En Auth > URL Configuration configurar Site URL: `http://localhost:5173` y Redir
 
 ```bash
 npm run dev
+```
+
+Se abre en `http://localhost:5173`.
+
+## Tests
+
+Usan [Vitest](https://vitest.dev) con entorno jsdom. Cada test está al lado de su archivo (`*.test.js(x)`).
+
+```bash
+npm test                                  # todos, una sola corrida
+npx vitest run src/lib/sets.test.js       # un solo archivo
+npx vitest run -t "pirámide"              # solo los tests cuyo nombre coincide
 ```
 
 ## 6. Despliegue en Vercel
