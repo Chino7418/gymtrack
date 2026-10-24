@@ -5,6 +5,7 @@ import { grupoLabel } from '../lib/muscles'
 
 export const norm = (s) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const MIOS = 'mine'
+const PAGE = 30 // ejercicios por página: la lista fluye con la página en vez de tener scroll propio
 
 // Buscador de ejercicios: "Mis ejercicios" (opcional) + categorías del catálogo wger.
 // onPick recibe el ejercicio propio o el item del catálogo (sin id de nuestra tabla).
@@ -16,6 +17,9 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
   const [picking, setPicking] = useState(null)
   const [open, setOpen] = useState(null)
   const [onlyImg, setOnlyImg] = useState(false)
+  const [limit, setLimit] = useState(PAGE)
+  // Al cambiar de categoría o de filtro se vuelve a mostrar la primera página
+  useEffect(() => { setLimit(PAGE) }, [cat, q, onlyImg])
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
             <p className="text-muted small mb-0">{cat === MIOS && !q ? 'Todavía no tenés ejercicios: elegí una categoría del catálogo.' : 'Sin resultados.'}</p>
           ) : (
             <ul className="list-group catalog-list">
-              {shown.map((x) => (
+              {shown.slice(0, limit).map((x) => (
                 <li key={x.id} className="list-group-item">
                   <div className="d-flex justify-content-between align-items-center gap-2">
                     <button type="button" className="ex-row min-w-0" onClick={() => setOpen(open === x.id ? null : x.id)} aria-expanded={open === x.id}>
@@ -72,8 +76,8 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
                       </span>
                     </button>
                     {markAdded && added.has(norm(x.name))
-                      ? <span className="badge text-bg-success">Agregado</span>
-                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap" disabled={picking === x.id} onClick={() => pick(x)} aria-label={`Agregar ${x.name}`}>+ Agregar</button>}
+                      ? <span className="badge text-bg-success flex-none">Agregado</span>
+                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap flex-none" disabled={picking === x.id} onClick={() => pick(x)} aria-label={`Agregar ${x.name}`}>+ Agregar</button>}
                   </div>
                   {open === x.id && (
                     <div className="ex-detail mt-2">
@@ -84,6 +88,11 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
                 </li>
               ))}
             </ul>
+          )}
+          {shown.length > limit && (
+            <button type="button" className="btn btn-outline-secondary w-100 mt-2" onClick={() => setLimit(limit + PAGE)}>
+              Ver más ({shown.length - limit} restantes)
+            </button>
           )}
           {cat !== MIOS && <small className="text-muted d-block mt-2">Catálogo de <a href="https://wger.de" target="_blank" rel="noreferrer">wger.de</a></small>}
         </>
