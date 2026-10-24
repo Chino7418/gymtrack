@@ -121,6 +121,7 @@ export default function WorkoutForm() {
   const save = async (e) => {
     e.preventDefault(); setError('')
     if (!name.trim()) return setError('Poné un nombre al entrenamiento')
+    if (!date) return setError('Elegí la fecha del entrenamiento')
     if (items.length === 0) return setError('Agregá al menos un ejercicio')
     for (const [i, it] of items.entries()) {
       if (!it.exercise_id) return setError(`Elegí el ejercicio #${i + 1}`)
@@ -169,7 +170,7 @@ export default function WorkoutForm() {
     </>
   )
   return (
-    <form onSubmit={save}>
+    <form onSubmit={save} noValidate>
       <h1 className="h4 mb-3">{id ? 'Editar entrenamiento' : 'Nuevo entrenamiento'}</h1>
       <ErrorMsg error={error} />
       <div className="row g-2 mb-3">
@@ -206,9 +207,9 @@ export default function WorkoutForm() {
                       <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="30" value={it.quick.min} onChange={(e) => updQuick(i, { min: e.target.value })} /></label>
                     <span className="quick-sep" aria-hidden="true">–</span>
                     <label className="quick-field"><span>Kg máx.</span>
-                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="opcional" value={it.quick.max} onChange={(e) => updQuick(i, { max: e.target.value })} /></label>
+                      <input type="number" inputMode="decimal" min="0" step="any" className="form-control" placeholder="—" aria-describedby={`qhint-${i}`} value={it.quick.max} onChange={(e) => updQuick(i, { max: e.target.value })} /></label>
                   </div>
-                  <p className="quick-preview small text-muted mb-2" aria-live="polite">
+                  <p id={`qhint-${i}`} className="quick-preview small text-muted mb-2" aria-live="polite">
                     {preview ? `Series: ${preview.map((s) => s.weight_kg).join(' · ')} kg × ${it.quick.reps}` : 'Completá series, repeticiones y peso. El máximo es opcional: si lo ponés, el peso sube parejo serie a serie.'}
                   </p>
                 </>

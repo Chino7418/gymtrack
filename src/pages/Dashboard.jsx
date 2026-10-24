@@ -86,7 +86,7 @@ export default function Dashboard() {
         <div className="col-4">
           <Link to="/attendance" className="card stat h-100">
             <span className="stat-label stat-ic"><Flame size={14} aria-hidden="true" />Asistencia</span>
-            <span className="stat-value">{data.month}<small>días</small></span>
+            <span className="stat-value">{data.month}<small>{data.month === 1 ? 'día' : 'días'}</small></span>
             <span className="stat-sub">{dayjs().format('MMM')} · {data.total} total</span>
           </Link>
         </div>
