@@ -22,8 +22,9 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     loading,
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
-    signUp: (email, password, name) =>
-      supabase.auth.signUp({ email, password, options: { data: { full_name: name } } }),
+    // meta = { first_name, last_name, username }: el trigger handle_new_user crea el perfil con esos campos
+    signUp: (email, password, meta) =>
+      supabase.auth.signUp({ email, password, options: { data: meta } }),
     signOut: () => supabase.auth.signOut(),
     forgot: (email) =>
       supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` }),
