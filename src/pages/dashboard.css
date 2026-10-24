@@ -21,13 +21,13 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-track { fill: none; stroke: var(--track); stroke-width: 9; }
 .timer-arc { fill: none; stroke: var(--accent); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s; }
-[data-bs-theme="dark"] .timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(232, 185, 49, 0.45)); }
-.timer-done .timer-arc { stroke: var(--danger); filter: none; }
+[data-bs-theme="dark"] .timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.45)); }
+.timer-done .timer-arc { stroke: var(--success); filter: none; } /* verde = a la serie; el rojo es el acento */
 .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-digits { font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-.timer-done .timer-digits { color: var(--danger-text); }
+.timer-done .timer-digits { color: var(--success); }
 .timer-caption { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em; color: var(--muted); margin-top: 0.25rem; }
-.timer-done .timer-caption { color: var(--danger-text); animation: timer-pulse 1s ease-in-out 5; }
+.timer-done .timer-caption { color: var(--success); animation: timer-pulse 1s ease-in-out 5; }
 .timer-preset { border: 1px solid var(--line-strong); color: var(--fg); border-radius: 999px; padding: 0.15rem 0.65rem; }
 .timer-preset:hover { color: var(--fg); border-color: var(--fg); background: var(--surface-strong); }
 .timer-preset.active { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 700; }

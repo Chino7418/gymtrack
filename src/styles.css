@@ -1,40 +1,41 @@
-/* Una Más · temas de color: oscuro "Oro olímpico" y claro "Oro claro" (el atributo data-bs-theme lo pone src/lib/theme.js) */
+/* Una Más · temas de color: oscuro "Rojo racing" y claro "Racing claro" (el atributo data-bs-theme lo pone src/lib/theme.js) */
 
 /* ---------- 1. Tokens: mismo set en los dos temas ----------
-   Oscuro "Oro olímpico" y claro "Oro claro". Contrastes WCAG AA verificados. */
+   Oscuro "Rojo racing" y claro "Racing claro". Contrastes WCAG AA verificados.
+   El acento es rojo: Borrar se distingue por ir solo con borde, y el fin del descanso usa --success. */
 
 [data-bs-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #0f0f13;
-  --bg-rgb: 15, 15, 19;
-  --surface: #1a1a20;
+  --bg: #0d0d0f;
+  --bg-rgb: 13, 13, 15;
+  --surface: #18181b;
   --surface-sheen: linear-gradient(transparent, transparent);
-  --surface-solid: #1a1a20;
-  --surface-strong: #26262e;
-  --input-bg: #14141a;
-  --input-bg-focus: #17171d;
+  --surface-solid: #18181b;
+  --surface-strong: #27272a;
+  --input-bg: #131316;
+  --input-bg-focus: #16161a;
 
-  --line: #2c2c35;
-  --line-strong: #6e6e7c;
+  --line: #2b2b30;
+  --line-strong: #6b6b74;
 
-  --fg: #f3f1ea;
-  --fg-rgb: 243, 241, 234;
-  --muted: #a9a7a0;
-  --placeholder: #95938c;
-  --on-fg: #0f0f13;
+  --fg: #f4f4f5;
+  --fg-rgb: 244, 244, 245;
+  --muted: #a1a1aa;
+  --placeholder: #8f8f99;
+  --on-fg: #0d0d0f;
 
-  --accent: #e8b931;
-  --accent-rgb: 232, 185, 49;
-  --accent-fill: #e8b931;
-  --accent-fill-hover: #f0c64a;
-  --accent-fill-border: #e8b931;
-  --accent-text: #f0c64a;
-  --accent-text-hover: #f7d77a;
-  --on-accent: #1a1403;
-  --accent-grad: linear-gradient(135deg, #f0c64a, #c99a1a);
-  --outline-primary: var(--accent-text);
-  --outline-primary-border: var(--accent);
+  --accent: #ff3b3b;
+  --accent-rgb: 255, 59, 59;
+  --accent-fill: #ff3b3b;
+  --accent-fill-hover: #ff5c5c;
+  --accent-fill-border: #ff3b3b;
+  --accent-text: #ff6b6b;
+  --accent-text-hover: #ff9494;
+  --on-accent: #140404;
+  --accent-grad: linear-gradient(135deg, #ff5c5c, #d61f26);
+  --outline-primary: var(--fg);
+  --outline-primary-border: var(--line-strong);
 
   --danger: #ff6b6b;
   --danger-rgb: 255, 107, 107;
@@ -52,62 +53,62 @@
 
   --warning: #ff9f1c;
   --warning-rgb: 255, 159, 28;
-  --on-warning: #1a1403;
+  --on-warning: #1a0e02;
 
-  --focus: #f0c64a;
-  --track: #2a2a32;
+  --focus: #ff6b6b;
+  --track: #27272a;
 
-  --nav-bg: rgba(15, 15, 19, 0.94);
+  --nav-bg: rgba(13, 13, 15, 0.94);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 20px rgba(0, 0, 0, 0.35);
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
   --halo-1: transparent;
   --halo-2: transparent;
   --halo-3: transparent;
 
-  --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%231a1403' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
-  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23a9a7a0'/%3e%3c/svg%3e");
-  --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231a1403'/%3e%3c/svg%3e");
+  --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23140404' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23a1a1aa'/%3e%3c/svg%3e");
+  --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23140404'/%3e%3c/svg%3e");
 }
 
 [data-bs-theme="light"] {
   color-scheme: light;
 
-  --bg: #f5f3ec;
-  --bg-rgb: 245, 243, 236;
-  --surface: #fffdf7;
+  --bg: #f5f5f4;
+  --bg-rgb: 245, 245, 244;
+  --surface: #ffffff;
   --surface-sheen: linear-gradient(transparent, transparent);
-  --surface-solid: #fffdf7;
-  --surface-strong: #ece8dc;
+  --surface-solid: #ffffff;
+  --surface-strong: #ecebea;
   --input-bg: #ffffff;
   --input-bg-focus: #ffffff;
 
-  --line: #e2ddd0;
-  --line-strong: #8a8578;
+  --line: #e2e1df;
+  --line-strong: #8a8a93;
 
-  --fg: #17150f;
-  --fg-rgb: 23, 21, 15;
-  --muted: #5f5b50;
-  --placeholder: #77736a;
-  --on-fg: #fffdf7;
+  --fg: #18181b;
+  --fg-rgb: 24, 24, 27;
+  --muted: #52525b;
+  --placeholder: #71717a;
+  --on-fg: #ffffff;
 
-  --accent: #946b00;                   /* gráficos: anillo, check, bordes activos (≥3:1) */
-  --accent-rgb: 148, 107, 0;
-  --accent-fill: #e8b931;              /* relleno de botón con texto oscuro (9.97:1) */
-  --accent-fill-hover: #f0c64a;
-  --accent-fill-border: #946b00;       /* el dorado sobre crema necesita borde para recortarse */
-  --accent-text: #7a5a00;
-  --accent-text-hover: #5c4400;
-  --on-accent: #1a1403;
-  --accent-grad: linear-gradient(135deg, #e8b931, #946b00);
+  --accent: #d61f26;
+  --accent-rgb: 214, 31, 38;
+  --accent-fill: #d61f26;
+  --accent-fill-hover: #b8171d;
+  --accent-fill-border: #d61f26;
+  --accent-text: #b3141b;
+  --accent-text-hover: #8f0f15;
+  --on-accent: #ffffff;
+  --accent-grad: linear-gradient(135deg, #e5383b, #b3141b);
   --outline-primary: var(--fg);
   --outline-primary-border: var(--fg);
 
-  --danger: #a8231b;
-  --danger-rgb: 168, 35, 27;
-  --danger-text: #a8231b;
+  --danger: #9f1239;
+  --danger-rgb: 159, 18, 57;
+  --danger-text: #9f1239;
   --on-danger: #ffffff;
-  --danger-bg: #fbeae7;
-  --danger-border: #e9b4ab;
+  --danger-bg: #fbe8ee;
+  --danger-border: #eab0c0;
 
   --success: #157a42;
   --success-fill: #19864a;
@@ -120,18 +121,18 @@
   --warning-rgb: 194, 65, 12;
   --on-warning: #ffffff;
 
-  --focus: #17150f;
-  --track: #e9e4d6;
+  --focus: #18181b;
+  --track: #e7e5e4;
 
-  --nav-bg: rgba(255, 253, 247, 0.95);
-  --shadow: 0 1px 2px rgba(23, 21, 15, 0.06), 0 4px 16px rgba(23, 21, 15, 0.06);
-  --shadow-sm: 0 1px 2px rgba(23, 21, 15, 0.08);
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --shadow: 0 1px 2px rgba(24, 24, 27, 0.06), 0 4px 16px rgba(24, 24, 27, 0.06);
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.08);
   --halo-1: transparent;
   --halo-2: transparent;
   --halo-3: transparent;
 
   --check-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
-  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%235f5b50'/%3e%3c/svg%3e");
+  --switch-off: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2352525b'/%3e%3c/svg%3e");
   --switch-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
 }
 

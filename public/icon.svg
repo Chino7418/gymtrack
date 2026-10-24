@@ -1,11 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Una Más: barras de progreso y la próxima por hacer -->
-  <rect width="512" height="512" rx="112" fill="#e8b931"/>
-  <g fill="#1a1403">
-    <rect x="98" y="300" width="56" height="112" rx="14" opacity="0.45"/>
-    <rect x="178" y="250" width="56" height="162" rx="14" opacity="0.6"/>
-    <rect x="258" y="196" width="56" height="216" rx="14" opacity="0.8"/>
-  </g>
-  <rect x="338" y="196" width="56" height="216" rx="14" fill="none" stroke="#1a1403" stroke-width="12" stroke-dasharray="20 14"/>
-  <path d="M366 92 v76 M328 130 h76" stroke="#1a1403" stroke-width="30" stroke-linecap="round"/>
+  <!-- Una Más: pesa rusa con "+1" (asa de manija plana, cuerpo redondo más ancho que el asa) -->
+  <rect width="512" height="512" rx="112" fill="#ff3b3b"/>
+  <path d="M168 276 V184 Q168 132 220 132 H292 Q344 132 344 184 V276" fill="none" stroke="#140404" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="334" r="126" fill="#140404"/>
+  <rect x="178" y="426" width="156" height="30" rx="12" fill="#140404"/>
+  <text x="256" y="372" text-anchor="middle" fill="#ff3b3b" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="98">+1</text>
 </svg>
