@@ -6,12 +6,13 @@ import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
+import ConfirmButton from '../components/ConfirmButton'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
-ChartJS.defaults.color = '#c9cedb'
-ChartJS.defaults.borderColor = 'rgba(255,255,255,0.10)'
-ChartJS.defaults.color = '#c9cedb'
-ChartJS.defaults.borderColor = 'rgba(255,255,255,0.10)'
+
+// Colores del gráfico tomados del tema activo (se recalculan al cambiar de tema)
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim()
+const chartColors = () => ({ text: css('--bs-secondary-color'), grid: css('--bs-border-color'), line: css('--bs-primary') })
 
 export default function Weight() {
   const { user } = useAuth()
@@ -19,6 +20,12 @@ export default function Weight() {
   const [value, setValue] = useState('')
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [error, setError] = useState('')
+  const [colors, setColors] = useState(chartColors)
+  useEffect(() => {
+    const on = () => setColors(chartColors())
+    window.addEventListener('themechange', on)
+    return () => window.removeEventListener('themechange', on)
+  }, [])
 
   const load = async () => {
     const { data, error } = await supabase.from(T.weights).select('*').order(C.weightDate)
@@ -41,25 +48,27 @@ export default function Weight() {
 
   const data = {
     labels: rows.map((r) => dayjs(r[C.weightDate]).format('DD/MM')),
-    datasets: [{ label: 'Peso (kg)', data: rows.map((r) => r[C.weightValue]), borderColor: '#7c9cff', backgroundColor: '#7c9cff', tension: 0.25 }],
+    datasets: [{ label: 'Peso (kg)', data: rows.map((r) => r[C.weightValue]), borderColor: colors.line, backgroundColor: colors.line, tension: 0.25 }],
   }
+  const axis = { ticks: { color: colors.text }, grid: { color: colors.grid } }
+  const options = { responsive: true, plugins: { legend: { labels: { color: colors.text } } }, scales: { x: axis, y: axis } }
   return (
     <>
       <h1 className="h4 mb-3">Peso corporal</h1>
       <ErrorMsg error={error} />
       <form onSubmit={add} className="row g-2 mb-4">
-        <div className="col-6 col-md-3"><input type="number" step="0.1" min="0" className="form-control" placeholder="Peso (kg)" value={value} onChange={(e) => setValue(e.target.value)} /></div>
-        <div className="col-6 col-md-3"><input type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
-        <div className="col-12 col-md-2"><button className="btn btn-primary w-100">Registrar</button></div>
+        <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-value">Peso (kg)</label><input id="w-value" type="number" inputMode="decimal" step="any" min="0" className="form-control" value={value} onChange={(e) => setValue(e.target.value)} /></div>
+        <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-date">Fecha</label><input id="w-date" type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+        <div className="col-12 col-md-2 d-flex align-items-end"><button className="btn btn-primary w-100">Registrar</button></div>
       </form>
       {rows.length === 0 ? <p className="text-muted">Todavía no registraste tu peso.</p> : (
         <>
-          <div className="mb-4"><Line data={data} options={{ responsive: true }} /></div>
+          <div className="mb-4"><Line data={data} options={options} role="img" aria-label="Gráfico de evolución del peso; el detalle está en la lista de abajo" /></div>
           <ul className="list-group">
             {[...rows].reverse().map((r) => (
-              <li key={r.id} className="list-group-item d-flex justify-content-between align-items-center">
-                <span>{dayjs(r[C.weightDate]).format('DD/MM/YYYY')} — <strong>{r[C.weightValue]} kg</strong></span>
-                <button className="btn btn-sm btn-outline-danger" onClick={() => del(r.id)}>Borrar</button>
+              <li key={r.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
+                <span>{dayjs(r[C.weightDate]).format('DD/MM/YYYY')} · <strong>{r[C.weightValue]} kg</strong></span>
+                <ConfirmButton what={`el registro del ${dayjs(r[C.weightDate]).format('DD/MM')}`} onConfirm={() => del(r.id)} />
               </li>
             ))}
           </ul>

@@ -67,13 +67,17 @@ export default function RestTimer() {
   const frac = left > 0 ? Math.min(1, left / Math.max(total, left)) : 0
   const state = done ? 'done' : running ? 'run' : 'idle'
   const caption = done ? '¡A la serie!' : running ? 'descansando' : left < total ? 'en pausa' : 'listo'
+  // Solo se anuncian los cambios de estado, no cada segundo
+  const announce = done ? 'Descanso terminado. ¡A la próxima serie!' : running ? 'Descanso iniciado' : left < total ? 'Descanso en pausa' : ''
+  const preset = (s) => (s % 60 ? `${s} segundos` : `${s / 60} minuto${s > 60 ? 's' : ''}`)
 
   return (
     <div className={`card h-100 timer timer-${state}`}>
       <div className="card-body p-3">
-        <div className="stat-label mb-2">Descanso entre series</div>
-        <div className="d-flex align-items-center gap-3">
-          <div className="timer-ring" aria-live="polite">
+        <h2 className="stat-label mb-2">Descanso entre series</h2>
+        <span className="visually-hidden" role="status">{announce}</span>
+        <div className="timer-body">
+          <div className="timer-ring" role="timer" aria-label={`Descanso restante: ${fmt(left)}`}>
             <svg viewBox="0 0 120 120" aria-hidden="true">
               <defs>
                 <linearGradient id="timerGrad" x1="0" y1="0" x2="1" y2="1">
@@ -88,17 +92,19 @@ export default function RestTimer() {
               <div className="timer-caption">{caption}</div>
             </div>
           </div>
-          <div className="flex-grow-1 min-w-0">
-            <div className="d-flex gap-2 mb-2">
+          <div className="timer-controls">
+            <div className="d-flex gap-2">
               {running
                 ? <button className="btn btn-warning flex-grow-1" onClick={pause}>Pausar</button>
                 : <button className="btn btn-primary flex-grow-1" onClick={start}>{left > 0 && left < total && !done ? 'Seguir' : 'Iniciar'}</button>}
-              <button className="btn btn-outline-secondary" onClick={plus} aria-label="Sumar 15 segundos">+15</button>
-              <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">↺</button>
+              <button className="btn btn-outline-secondary" onClick={plus} aria-label="+15 segundos">+15</button>
+              <button className="btn btn-outline-secondary" onClick={reset} aria-label="Reiniciar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
+              </button>
             </div>
-            <div className="d-flex flex-wrap gap-1">
+            <div className="d-flex flex-wrap gap-2" role="group" aria-label="Duración del descanso">
               {PRESETS.map((s) => (
-                <button key={s} className={`btn btn-sm timer-preset ${total === s ? 'active' : ''}`} onClick={() => choose(s)}>
+                <button key={s} className={`btn btn-sm timer-preset ${total === s ? 'active' : ''}`} aria-pressed={total === s} aria-label={preset(s)} onClick={() => choose(s)}>
                   {s % 60 ? `${s}s` : `${s / 60}m`}
                 </button>
               ))}

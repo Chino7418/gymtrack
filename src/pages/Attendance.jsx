@@ -10,6 +10,7 @@ export default function Attendance() {
   const [month, setMonth] = useState(dayjs().startOf('month'))
   const [rows, setRows] = useState([])
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(null)
 
   const load = async () => {
     const { data, error } = await supabase.from(T.attendances).select('*')
@@ -20,12 +21,14 @@ export default function Attendance() {
   useEffect(() => { load() }, [month])
 
   const toggle = async (date) => {
-    setError('')
+    if (saving) return
+    setError(''); setSaving(date)
     const found = rows.find((r) => r.attendance_date === date)
     const { error } = found
       ? await supabase.from(T.attendances).delete().eq('id', found.id)
       : await supabase.from(T.attendances).insert({ user_id: user.id, attendance_date: date })
-    if (error) setError(error.message); else load()
+    if (error) setError(error.message); else await load()
+    setSaving(null)
   }
 
   const offset = (month.day() + 6) % 7 // semana desde lunes
@@ -34,18 +37,23 @@ export default function Attendance() {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <button className="btn btn-outline-secondary btn-sm" onClick={() => setMonth(month.subtract(1, 'month'))}>Anterior</button>
-        <h1 className="h5 m-0 text-capitalize">{month.format('MMMM YYYY')}</h1>
-        <button className="btn btn-outline-secondary btn-sm" onClick={() => setMonth(month.add(1, 'month'))}>Siguiente</button>
+      <h1 className="h4 mb-3">Asistencia</h1>
+      <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+        <button className="btn btn-outline-secondary btn-sm" onClick={() => setMonth(month.subtract(1, 'month'))} aria-label="Mes anterior">‹ Anterior</button>
+        <h2 className="h5 m-0 text-capitalize" aria-live="polite">{month.format('MMMM YYYY')}</h2>
+        <button className="btn btn-outline-secondary btn-sm" onClick={() => setMonth(month.add(1, 'month'))} aria-label="Mes siguiente">Siguiente ›</button>
       </div>
       <ErrorMsg error={error} />
-      <div className="d-grid text-center gap-1" style={{ gridTemplateColumns: 'repeat(7, 1fr)', maxWidth: 480 }}>
-        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => <div key={d} className="text-muted small">{d}</div>)}
+      <div className="att-grid">
+        {['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].map((d) => (
+          <abbr key={d} title={d} className="text-muted small text-center text-decoration-none">{d[0].toUpperCase()}</abbr>
+        ))}
         {cells.map((d, i) => d ? (
-          <button key={d} onClick={() => toggle(d)}
-            className={`btn btn-sm ${attended.has(d) ? 'btn-success' : 'btn-outline-secondary'}`}>
+          <button key={d} onClick={() => toggle(d)} disabled={saving === d}
+            aria-pressed={attended.has(d)} aria-label={dayjs(d).format('dddd D [de] MMMM')}
+            className={`btn att-day ${attended.has(d) ? 'att-on' : ''} ${d === dayjs().format('YYYY-MM-DD') ? 'att-today' : ''}`}>
             {dayjs(d).date()}
+            {attended.has(d) && <span className="att-check" aria-hidden="true">✓</span>}
           </button>
         ) : <div key={`e${i}`} />)}
       </div>

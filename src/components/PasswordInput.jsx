@@ -9,7 +9,8 @@ export default function PasswordInput({ wrapperClass = 'mb-2', ...props }) {
         type="button"
         className="btn btn-outline-secondary"
         onClick={() => setShow(!show)}
-        aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        aria-pressed={show}
+        aria-controls={props.id}
       >
         {show ? 'Ocultar' : 'Mostrar'}
       </button>

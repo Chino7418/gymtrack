@@ -50,7 +50,7 @@ export default function WorkoutForm() {
   // Nueva serie = copia de la anterior (peso y reps), para cargar más rápido
   const addSet = (i) => {
     const last = items[i].sets.at(-1)
-    upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '' } : emptySet()] })
+    upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '', showNote: false } : emptySet()] })
   }
 
   // Del catálogo wger: si no está en mis ejercicios, lo crea
@@ -122,46 +122,54 @@ export default function WorkoutForm() {
     nav('/workouts')
   }
 
-  if (loading) return <p>Cargando…</p>
+  if (loading) return <p role="status">Cargando…</p>
   return (
     <form onSubmit={save}>
       <h1 className="h4 mb-3">{id ? 'Editar entrenamiento' : 'Nuevo entrenamiento'}</h1>
       <ErrorMsg error={error} />
       <div className="row g-2 mb-3">
-        <div className="col-12 col-md-6"><label className="form-label">Nombre</label><input className="form-control" value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="col-12 col-md-6"><label className="form-label">Fecha</label><input type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
-        <div className="col-12"><label className="form-label">Notas</label><textarea className="form-control" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+        <div className="col-12 col-md-6"><label className="form-label" htmlFor="wf-name">Nombre</label><input id="wf-name" className="form-control" placeholder="Ej.: Pecho y tríceps" aria-invalid={error.startsWith('Poné un nombre') || undefined} value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="col-12 col-md-6"><label className="form-label" htmlFor="wf-date">Fecha</label><input id="wf-date" type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+        <div className="col-12"><label className="form-label" htmlFor="wf-notes">Notas</label><textarea id="wf-notes" className="form-control" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         <div className="col-12 form-check ms-2"><input id="att" type="checkbox" className="form-check-input" checked={attend} onChange={(e) => setAttend(e.target.checked)} /><label htmlFor="att" className="form-check-label">Registrar asistencia ese día</label></div>
       </div>
 
       {items.map((it, i) => (
-        <div className="card mb-3" key={i}>
-          <div className="card-body">
+        <section className="card mb-3" key={i} aria-labelledby={`ex-${i}`}>
+          <div className="card-body p-3">
             <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
               <div className="min-w-0">
-                <strong className="d-block text-truncate">{i + 1}. {exName(it.exercise_id)}</strong>
+                <h2 id={`ex-${i}`} className="h6 fw-bold mb-0 text-truncate">{i + 1}. {exName(it.exercise_id)}</h2>
                 {it.prev && <small className="text-muted">Última vez ({dayjs(it.prev.date).format('DD/MM')}): {resumen(it.prev.sets)}</small>}
               </div>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))}>Quitar</button>
+              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))} aria-label={`Quitar ${exName(it.exercise_id)}`}>Quitar</button>
             </div>
+            {it.sets.length > 0 && (
+              <div className="set-row set-head" aria-hidden="true"><span>Serie</span><span>Kg</span><span>Reps</span></div>
+            )}
             {it.sets.map((s, j) => (
-              <div className="row g-2 mb-2 align-items-center" key={j}>
-                <div className="col-2 col-md-1 text-muted">#{j + 1}</div>
-                <div className="col-5 col-md-3"><input type="number" min="0" step="0.5" className="form-control" placeholder="Peso (kg)" value={s.weight_kg} onChange={(e) => updSet(i, j, { weight_kg: e.target.value })} /></div>
-                <div className="col-5 col-md-3"><input type="number" min="0" className="form-control" placeholder="Reps" value={s.reps} onChange={(e) => updSet(i, j, { reps: e.target.value })} /></div>
-                <div className="col-9 col-md-4"><input className="form-control" placeholder="Nota" value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} /></div>
-                <div className="col-3 col-md-1"><button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button></div>
+              <div key={j} className="mb-2">
+                <div className="set-row">
+                  <span className="set-num">{j + 1}</span>
+                  <input type="number" inputMode="decimal" min="0" step="any" className="form-control" aria-label={`Peso serie ${j + 1} (kg)`} value={s.weight_kg} onChange={(e) => updSet(i, j, { weight_kg: e.target.value })} />
+                  <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" aria-label={`Repeticiones serie ${j + 1}`} value={s.reps} onChange={(e) => updSet(i, j, { reps: e.target.value })} />
+                  <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}>✎</button>
+                  <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button>
+                </div>
+                {(s.notes || s.showNote) && (
+                  <input className="form-control mt-2" placeholder="Nota (ej.: con pausa, al fallo)" aria-label={`Nota serie ${j + 1}`} value={s.notes} onChange={(e) => updSet(i, j, { notes: e.target.value })} />
+                )}
               </div>
             ))}
             <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => addSet(i)}>Agregar serie</button>
           </div>
-        </div>
+        </section>
       ))}
 
       {picking && <ExercisePicker mine={catalog} onPick={addExercise} includeMine />}
 
       <div className="d-flex gap-2 flex-wrap">
-        <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} onClick={() => setPicking(!picking)}>{picking ? 'Cerrar buscador' : 'Agregar ejercicio'}</button>
+        <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking ? 'Cerrar buscador' : 'Agregar ejercicio'}</button>
         <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
         <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/workouts')}>Cancelar</button>
       </div>

@@ -10,6 +10,14 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="Una Más" />
     <title>Una Más</title>
+    <script>
+      // Aplica el tema antes de pintar para evitar un destello del tema equivocado
+      try {
+        var p = localStorage.getItem('unamas.theme')
+        var t = p === 'light' || p === 'dark' ? p : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.setAttribute('data-bs-theme', t)
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

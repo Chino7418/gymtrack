@@ -60,22 +60,22 @@ export default function Profile() {
     <>
       <h1 className="h4 mb-3">Perfil</h1>
       <ErrorMsg error={error} />
-      {ok && <div className="alert alert-success py-2">Perfil guardado.</div>}
+      {ok && <div role="status" className="alert alert-success py-2">Perfil guardado.</div>}
       <div className="row g-3">
         <div className="col-12 col-lg-6">
           <form onSubmit={save} className="card card-body">
-            <label className="form-label">Email</label>
-            <input className="form-control mb-2" value={user.email} disabled />
+            <label className="form-label" htmlFor="pf-email">Email</label>
+            <input id="pf-email" className="form-control mb-2" value={user.email} readOnly />
             <div className="row g-2">
-              <div className="col-6"><label className="form-label">Nombre</label><input className="form-control mb-2" value={f.first_name} onChange={set('first_name')} /></div>
-              <div className="col-6"><label className="form-label">Apellido</label><input className="form-control mb-2" value={f.last_name} onChange={set('last_name')} /></div>
+              <div className="col-6"><label className="form-label" htmlFor="pf-first">Nombre</label><input id="pf-first" autoComplete="given-name" className="form-control mb-2" value={f.first_name} onChange={set('first_name')} /></div>
+              <div className="col-6"><label className="form-label" htmlFor="pf-last">Apellido</label><input id="pf-last" autoComplete="family-name" className="form-control mb-2" value={f.last_name} onChange={set('last_name')} /></div>
             </div>
-            <label className="form-label">Usuario</label>
-            <input className="form-control mb-2" autoCapitalize="none" value={f.username} onChange={set('username')} />
+            <label className="form-label" htmlFor="pf-user">Usuario</label>
+            <input id="pf-user" autoComplete="username" className="form-control mb-2" autoCapitalize="none" value={f.username} onChange={set('username')} />
             <div className="row g-2">
-              <div className="col-12 col-sm-6"><label className="form-label">Fecha de nacimiento</label><input type="date" className="form-control mb-2" value={f.birth_date} onChange={set('birth_date')} /></div>
-              <div className="col-6 col-sm-3"><label className="form-label">Altura (cm)</label><input type="number" step="0.1" min="0" className="form-control mb-2" value={f.height_cm} onChange={set('height_cm')} /></div>
-              <div className="col-6 col-sm-3"><label className="form-label">Objetivo (kg)</label><input type="number" step="0.1" min="0" className="form-control mb-2" value={f.goal_weight_kg} onChange={set('goal_weight_kg')} /></div>
+              <div className="col-12 col-sm-6"><label className="form-label" htmlFor="pf-birth">Fecha de nacimiento</label><input id="pf-birth" autoComplete="bday" type="date" className="form-control mb-2" value={f.birth_date} onChange={set('birth_date')} /></div>
+              <div className="col-6 col-sm-3"><label className="form-label" htmlFor="pf-height">Altura (cm)</label><input id="pf-height" type="number" inputMode="decimal" step="any" min="0" className="form-control mb-2" value={f.height_cm} onChange={set('height_cm')} /></div>
+              <div className="col-6 col-sm-3"><label className="form-label" htmlFor="pf-goal">Objetivo (kg)</label><input id="pf-goal" type="number" inputMode="decimal" step="any" min="0" className="form-control mb-2" value={f.goal_weight_kg} onChange={set('goal_weight_kg')} /></div>
             </div>
             <button className="btn btn-primary mt-2">Guardar cambios</button>
           </form>

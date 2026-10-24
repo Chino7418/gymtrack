@@ -1,0 +1,51 @@
+/* Una Más · estructura, accesibilidad y mobile (sin colores propios: usa los tokens del tema) */
+
+/* El foco visible y el link "Saltar al contenido" están en styles.css, con los colores de cada tema */
+
+/* Pisos de tamaño de texto (mínimo 12px) */
+/* (:root sube la especificidad porque dashboard.css se carga después) */
+:root .stat-label, :root .stat-sub, :root .stat-value small, :root .timer-caption { font-size: 0.75rem; }
+:root h2.stat-label { font-weight: 600; margin-bottom: 0.25rem; }
+
+/* Objetivos táctiles de 44px en pantallas táctiles */
+@media (pointer: coarse) {
+  .btn, .btn-sm, .form-control, .form-select { min-height: 44px; }
+  .btn { min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .btn-sm { padding-inline: 0.75rem; }
+  .navbar-toggler { min-height: 44px; }
+}
+.auth-links a { display: inline-block; padding: 0.65rem 0; }
+.flex-none { flex: none; }
+
+/* Chips (categorías del catálogo) */
+.chip { --bs-btn-color: var(--fg); --bs-btn-border-color: var(--line-strong); --bs-btn-hover-color: var(--fg); --bs-btn-hover-border-color: var(--fg); --bs-btn-hover-bg: var(--surface-strong); border-radius: 999px; padding-inline: 0.85rem; }
+.chip.active { --bs-btn-bg: var(--fg); --bs-btn-color: var(--on-fg); --bs-btn-border-color: var(--fg); --bs-btn-hover-bg: var(--fg); --bs-btn-hover-color: var(--on-fg); --bs-btn-active-bg: var(--fg); --bs-btn-active-color: var(--on-fg); font-weight: 600; }
+
+/* Series del entrenamiento: una sola línea a 360px */
+.set-row { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) minmax(0, 1fr) 44px 44px; gap: 0.5rem; align-items: center; }
+.set-head { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); margin-bottom: 0.25rem; }
+.set-num { text-align: center; font-weight: 700; color: var(--bs-secondary-color); font-variant-numeric: tabular-nums; }
+.set-row .btn { padding: 0; min-width: 0; height: 100%; min-height: 38px; }
+
+/* Temporizador: en pantallas angostas los controles van debajo del anillo */
+.timer-body { display: flex; align-items: center; gap: 1rem; }
+.timer-controls { display: grid; gap: 0.6rem; flex: 1; min-width: 0; }
+@media (max-width: 399.98px) {
+  .timer-body { flex-direction: column; align-items: stretch; }
+  .timer-ring { align-self: center; }
+}
+
+/* Asistencia: calendario con días de 44px y marca que no depende del color */
+.att-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; max-width: 480px; }
+.att-day { position: relative; padding: 0; font-variant-numeric: tabular-nums; }
+.att-day.att-today { outline: 2px dashed var(--bs-secondary-color); outline-offset: -4px; }
+.att-check { position: absolute; top: 2px; right: 5px; font-size: 0.7rem; line-height: 1; }
+
+/* Listas con scroll interno: que no arrastren la página */
+.catalog-list { overscroll-behavior: contain; }
+
+/* Movimiento reducido */
+.timer-done .timer-caption { animation-iteration-count: 5; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

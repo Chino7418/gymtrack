@@ -33,19 +33,19 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
   const source = cat === MIOS ? mine.filter((x) => x.is_active !== false) : items
   const shown = source.filter((x) => norm(x.name).includes(norm(q)) && (!onlyImg || x.thumb))
   const chip = (id, label) => (
-    <button key={id} type="button" className={`btn btn-sm ${cat === id ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => setCat(id)}>{label}</button>
+    <button key={id} type="button" className={`btn btn-sm chip ${cat === id ? 'active' : ''}`} aria-pressed={cat === id} onClick={() => setCat(id)}>{label}</button>
   )
 
   return (
     <div className="card card-body p-3 mb-3">
-      <div className="d-flex flex-wrap gap-1 mb-2">
+      <div className="d-flex flex-wrap gap-2 mb-2" role="group" aria-label="Categorías">
         {includeMine && chip(MIOS, 'Mis ejercicios')}
         {CATEGORIAS.map((c) => chip(c.id, c.label))}
       </div>
       <ErrorMsg error={error} />
-      {cat == null ? <p className="text-muted small mb-0">Elegí una categoría para ver ejercicios.</p> : busy ? <p className="mb-0">Cargando…</p> : (
+      {cat == null ? <p className="text-muted small mb-0">Elegí una categoría para ver ejercicios.</p> : busy ? <p className="mb-0" role="status">Cargando…</p> : (
         <>
-          <input className="form-control mb-2" placeholder="Filtrar por nombre…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input type="search" className="form-control mb-2" placeholder="Filtrar por nombre…" aria-label="Filtrar ejercicios por nombre" value={q} onChange={(e) => setQ(e.target.value)} />
           {cat !== MIOS && (
             <div className="form-check form-switch mb-2">
               <input id="onlyImg" type="checkbox" className="form-check-input" checked={onlyImg} onChange={(e) => setOnlyImg(e.target.checked)} />
@@ -64,13 +64,13 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
                         ? <img src={x.thumb} alt="" className="ex-thumb" loading="lazy" />
                         : <span className="ex-thumb ex-thumb-empty">{x.name[0]}</span>}
                       <span className="min-w-0">
-                        <span className="d-block text-truncate">{x.name}{x.spanish === false && <small className="text-muted ms-1">(EN)</small>}</span>
+                        <span className="d-block text-truncate" lang={x.spanish === false ? 'en' : undefined}>{x.name}{x.spanish === false && <small className="text-muted ms-1">(EN)</small>}</span>
                         <small className="text-muted d-block text-truncate">{x.muscle_group}{x.equipment && ` · ${x.equipment}`}</small>
                       </span>
                     </button>
                     {markAdded && added.has(norm(x.name))
                       ? <span className="badge text-bg-success">Agregado</span>
-                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap" disabled={picking === x.id} onClick={() => pick(x)}>+ Agregar</button>}
+                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap" disabled={picking === x.id} onClick={() => pick(x)} aria-label={`Agregar ${x.name}`}>+ Agregar</button>}
                   </div>
                   {open === x.id && (
                     <div className="ex-detail mt-2">

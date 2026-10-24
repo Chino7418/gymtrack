@@ -1,6 +1,6 @@
 /* Dashboard compacto: pensado primero para celular */
 .stat { display: block; padding: 0.7rem 0.75rem; text-decoration: none; color: inherit; transition: border-color 0.15s; }
-.stat:hover { color: inherit; border-color: rgba(255, 255, 255, 0.28); }
+.stat:hover { color: inherit; border-color: var(--line-strong); }
 button.stat { font: inherit; text-align: left; width: 100%; }
 .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); }
 .stat-value { font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; }
@@ -18,19 +18,27 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 /* Temporizador: anillo que se vacía */
 .timer-ring { position: relative; width: 116px; height: 116px; flex: none; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.timer-track { fill: none; stroke: rgba(255, 255, 255, 0.09); stroke-width: 9; }
+.timer-track { fill: none; stroke: var(--track); stroke-width: 9; }
 .timer-arc { fill: none; stroke: url(#timerGrad); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s; }
-.timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(124, 92, 255, 0.55)); }
-.timer-done .timer-arc { stroke: var(--bs-danger); }
+[data-bs-theme="light"] .timer-arc { stroke: var(--accent); }
+/* Degradé del arco más claro en oscuro (≥3:1 contra el track). stop-color en CSS pisa el atributo del SVG. */
+[data-bs-theme="dark"] .timer-ring stop:first-child { stop-color: #7c9cff; }
+[data-bs-theme="dark"] .timer-ring stop:last-child { stop-color: #b98cff; }
+[data-bs-theme="dark"] .timer-run .timer-arc { filter: drop-shadow(0 0 6px rgba(124, 92, 255, 0.55)); }
+.timer-done .timer-arc { stroke: var(--danger); filter: none; }
 .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-digits { font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-.timer-done .timer-digits { color: var(--bs-danger); }
-.timer-caption { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--bs-secondary-color); margin-top: 0.25rem; }
-.timer-done .timer-caption { color: var(--bs-danger); animation: timer-pulse 1s ease-in-out infinite; }
-.timer-preset { border: 1px solid var(--glass-border); color: var(--bs-secondary-color); border-radius: 999px; padding: 0.15rem 0.65rem; }
-.timer-preset:hover { color: var(--bs-body-color); border-color: rgba(255, 255, 255, 0.3); }
-.timer-preset.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-@keyframes timer-pulse { 50% { opacity: 0.4; } }
+.timer-done .timer-digits { color: var(--danger-text); }
+.timer-caption { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em; color: var(--muted); margin-top: 0.25rem; }
+.timer-done .timer-caption { color: var(--danger-text); animation: timer-pulse 1s ease-in-out 5; }
+.timer-preset { border: 1px solid var(--line-strong); color: var(--fg); border-radius: 999px; padding: 0.15rem 0.65rem; }
+.timer-preset:hover { color: var(--fg); border-color: var(--fg); background: var(--surface-strong); }
+.timer-preset.active { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 700; }
+@keyframes timer-pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .timer-done .timer-caption { animation: none; }
+  .timer-arc, .stat { transition: none; }
+}
 
 @media (min-width: 768px) {
   .timer-ring { width: 150px; height: 150px; }
