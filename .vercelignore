@@ -1,0 +1,2 @@
+# Los tests no se despliegan: solo el handler de la función
+api/*.test.js

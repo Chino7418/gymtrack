@@ -31,6 +31,14 @@ describe('insertExercise', () => {
     expect(inserts[1]).toEqual({ name: 'Remo' })
   })
 
+  it('si falta la columna image_public_id, reintenta sin ella y conserva image_url', async () => {
+    respuestas.push({ data: null, error: { message: "Could not find the 'image_public_id' column of 'exercises' in the schema cache" } })
+    respuestas.push({ data: { id: 3 }, error: null })
+    const res = await insertExercise({ name: 'Remo', image_url: 'https://x/y.png', image_public_id: 'unamas/u/y' })
+    expect(res.data.id).toBe(3)
+    expect(inserts[1]).toEqual({ name: 'Remo', image_url: 'https://x/y.png' })
+  })
+
   it('no reintenta por otros errores', async () => {
     respuestas.push({ data: null, error: { message: 'duplicate key' } })
     const res = await insertExercise({ name: 'Remo', image_url: null })

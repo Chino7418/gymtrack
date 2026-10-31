@@ -25,9 +25,12 @@ Por defecto las fotos de ejercicios van al bucket `exercise-images` de Supabase 
 1. Crear una cuenta en [cloudinary.com](https://cloudinary.com) y copiar el **cloud name** del dashboard.
 2. En Settings > Upload > Upload presets, crear uno con **Signing mode: Unsigned** (opcional: limitar formatos `jpg,png,webp` y tamaño máximo; no fijes carpeta, la app manda `unamas/<user_id>`).
 3. Completar en `.env` (y en Vercel) `VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET`.
-4. Listo: las fotos nuevas se suben a `unamas/<user_id>/` y se sirven optimizadas (`f_auto,q_auto`). Las que ya estaban en Supabase siguen funcionando.
+4. Para que al reemplazar o borrar un ejercicio la foto también se borre de Cloudinary, copiar **API Key** y **API Secret** del dashboard y cargarlos **solo en el servidor** (Vercel y `.env` local, sin el prefijo `VITE_`): `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET`. El secreto nunca se manda al navegador: lo usa la función `api/delete-image.js`.
+5. Listo: las fotos nuevas se suben a `unamas/<user_id>/` y se sirven optimizadas (`f_auto,q_auto`). Las que ya estaban en Supabase siguen funcionando.
 
-El preset unsigned viaja en el frontend (es público por diseño). Cloudinary no permite borrar desde el navegador sin firma: las fotos reemplazadas o de ejercicios borrados quedan en la cuenta y se limpian desde el dashboard.
+El preset unsigned viaja en el frontend (es público por diseño). El borrado sí necesita firma: el navegador manda el `public_id` (guardado en `exercises.image_public_id`) a `/api/delete-image` con el JWT de Supabase; la función valida la sesión, que la foto esté en `unamas/<user_id>/` y recién ahí firma el `destroy`. Sin `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` la foto se borra de la base pero queda en Cloudinary.
+
+`npm run dev` no ejecuta las funciones de Vercel, así que el borrado en Cloudinary solo se prueba con `vercel dev` o en producción.
 
 ## 3. Migraciones
 
@@ -39,6 +42,7 @@ Ejecutá las migraciones SQL en Supabase SQL Editor (o CLI):
 - `supabase/migrations/20261020000000_goal_weight.sql`
 - `supabase/migrations/20261024000000_attendance_unique.sql`
 - `supabase/migrations/20261031000000_exercise_images.sql` (crea también el bucket `exercise-images` de Storage)
+- `supabase/migrations/20261101000000_exercise_image_public_id.sql` (columna `image_public_id` para borrar la foto en Cloudinary)
 
 Aplicalas en ese orden.
 
@@ -68,8 +72,8 @@ npx vitest run -t "pirámide"              # solo los tests cuyo nombre coincide
 
 1. Subir repo a GitHub/GitLab.
 2. Conectar repo en Vercel.
-3. Agregar variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY.
-4. Build: `npm run build`. Output: `dist`.
+3. Agregar variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Si usás Cloudinary, también VITE_CLOUDINARY_CLOUD_NAME, VITE_CLOUDINARY_UPLOAD_PRESET, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET (estas dos últimas sin `VITE_`, para la función de borrado).
+4. Build: `npm run build`. Output: `dist`. Las funciones de `api/` se despliegan solas.
 5. Configurar auth redirect a dominio Vercel.
 
 ## 7. PWA (instalar en el celular)

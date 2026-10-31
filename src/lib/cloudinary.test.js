@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 const { subida } = vi.hoisted(() => ({ subida: vi.fn(async () => ({ error: null })) }))
 vi.mock('./supabaseClient', () => ({
   supabase: {
+    auth: { getSession: async () => ({ data: { session: { access_token: 'jwt-de-prueba' } } }) },
     storage: {
       from: () => ({
         upload: subida,
@@ -17,12 +18,13 @@ vi.mock('./supabaseClient', () => ({
 const fetchMock = vi.fn()
 const foto = () => new File(['x'], 'foto.jpg', { type: 'image/jpeg' })
 
-// Reimporta images.js con las variables de Cloudinary dadas (vacías = fallback a Supabase)
+// Reimporta los módulos con las variables de Cloudinary dadas (vacías = fallback a Supabase)
 const setup = async ({ cloud = 'demo', preset = 'unamas' } = {}) => {
   vi.resetModules()
   vi.stubEnv('VITE_CLOUDINARY_CLOUD_NAME', cloud)
   vi.stubEnv('VITE_CLOUDINARY_UPLOAD_PRESET', preset)
-  return import('./images')
+  const [images, cloudinary] = await Promise.all([import('./images'), import('./cloudinary')])
+  return { ...images, ...cloudinary }
 }
 
 beforeEach(() => {
@@ -41,14 +43,20 @@ afterEach(() => {
 })
 
 describe('Cloudinary', () => {
-  it('sube la foto al preset y devuelve la URL optimizada', async () => {
+  it('sube la foto al preset y devuelve la URL optimizada y el public_id', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ secure_url: 'https://res.cloudinary.com/demo/image/upload/v1/unamas/u1/foto.jpg' }),
+      json: async () => ({
+        secure_url: 'https://res.cloudinary.com/demo/image/upload/v1/unamas/u1/foto.jpg',
+        public_id: 'unamas/u1/foto',
+      }),
     })
     const { uploadExerciseImage } = await setup()
-    const url = await uploadExerciseImage(foto(), 'u1')
-    expect(url).toBe('https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/v1/unamas/u1/foto.jpg')
+    const up = await uploadExerciseImage(foto(), 'u1')
+    expect(up).toEqual({
+      url: 'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/v1/unamas/u1/foto.jpg',
+      publicId: 'unamas/u1/foto',
+    })
     const [endpoint, opts] = fetchMock.mock.calls[0]
     expect(endpoint).toBe('https://api.cloudinary.com/v1_1/demo/image/upload')
     expect(opts.method).toBe('POST')
@@ -66,14 +74,32 @@ describe('Cloudinary', () => {
 
   it('sin variables de entorno guarda en Supabase', async () => {
     const { uploadExerciseImage } = await setup({ cloud: '', preset: '' })
-    const url = await uploadExerciseImage(foto(), 'u1')
-    expect(url).toBe('https://supabase.test/foto.jpg')
+    const up = await uploadExerciseImage(foto(), 'u1')
+    expect(up).toEqual({ url: 'https://supabase.test/foto.jpg', publicId: null })
     expect(subida).toHaveBeenCalledTimes(1)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('no intenta borrar fotos de Cloudinary desde el navegador', async () => {
+  it('pide borrar la foto a la función del servidor con la sesión', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: 'ok' }) })
+    const { deleteCloudinaryImage } = await setup()
+    await deleteCloudinaryImage('unamas/u1/foto')
+    const [endpoint, opts] = fetchMock.mock.calls[0]
+    expect(endpoint).toBe('/api/delete-image')
+    expect(opts.headers.Authorization).toBe('Bearer jwt-de-prueba')
+    expect(JSON.parse(opts.body)).toEqual({ publicId: 'unamas/u1/foto' })
+  })
+
+  it('borra por public_id aunque la URL sea de Cloudinary', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: 'ok' }) })
     const { removeExerciseImage } = await setup()
-    await expect(removeExerciseImage('https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/v1/unamas/u1/foto.jpg')).resolves.toBeUndefined()
+    await removeExerciseImage('https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/v1/unamas/u1/foto.jpg', 'unamas/u1/foto')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/delete-image')
+  })
+
+  it('no llama al servidor si no hay public_id', async () => {
+    const { deleteCloudinaryImage } = await setup()
+    await deleteCloudinaryImage(null)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

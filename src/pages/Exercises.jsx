@@ -11,7 +11,15 @@ import ConfirmButton from '../components/ConfirmButton'
 import { GRUPOS, grupoLabel } from '../lib/muscles'
 import TrainingTabs from '../components/TrainingTabs'
 
-const VACIO = { id: null, name: '', muscle_group: '', description: '', image_url: null }
+const VACIO = { id: null, name: '', muscle_group: '', description: '', image_url: null, image_public_id: null }
+
+// Si todavía no se aplicó la migración de image_public_id, reintenta sin esa columna
+async function updateExercise(id, payload) {
+  const res = await supabase.from(T.exercises).update(payload).eq('id', id)
+  if (!res.error || !res.error.message.includes('image_public_id')) return res
+  const { image_public_id, ...rest } = payload // eslint-disable-line no-unused-vars
+  return supabase.from(T.exercises).update(rest).eq('id', id)
+}
 
 function ExerciseList({ items, archived = false, onEdit, onDelete, onToggleArchive }) {
   return (
@@ -52,7 +60,7 @@ export default function Exercises() {
   const [showArchived, setShowArchived] = useState(false)
   useEffect(() => () => { if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview) }, [preview])
   const pickFile = (f) => { setFile(f); setPreview(URL.createObjectURL(f)) }
-  const clearPhoto = () => { setFile(null); setPreview(null); setForm({ ...form, image_url: null }) }
+  const clearPhoto = () => { setFile(null); setPreview(null); setForm({ ...form, image_url: null, image_public_id: null }) }
 
   const load = async () => {
     const { data, error } = await supabase.from(T.exercises).select('*').order('name')
@@ -68,19 +76,23 @@ export default function Exercises() {
     if (list.some((x) => x.id !== form.id && norm(x.name) === norm(form.name)))
       return setError('Ya tenés un ejercicio con ese nombre')
     setSaving(true)
+    let subida = null
     try {
-      const before = list.find((x) => x.id === form.id)?.image_url ?? null
-      const image_url = file ? await uploadExerciseImage(file, user.id) : form.image_url
+      const before = list.find((x) => x.id === form.id) ?? null
+      const up = file ? await uploadExerciseImage(file, user.id) : { url: form.image_url, publicId: form.image_public_id }
+      subida = file ? up : null
       const row = { name: form.name.trim(), muscle_group: form.muscle_group, description: form.description.trim() || null }
-      if (file || image_url !== before) row.image_url = image_url
+      if (file || up.url !== (before?.image_url ?? null)) { row.image_url = up.url; row.image_public_id = up.publicId }
       const { error } = form.id
-        ? await supabase.from(T.exercises).update({ ...row, updated_at: new Date().toISOString() }).eq('id', form.id)
+        ? await updateExercise(form.id, { ...row, updated_at: new Date().toISOString() })
         : await insertExercise({ ...row, user_id: user.id })
       if (error) throw new Error(/image_url/.test(error.message) ? 'Falta aplicar la migración de imágenes en Supabase' : error.message)
       // La foto anterior propia se borra del almacenamiento si se reemplazó o se quitó
-      if (before && before !== image_url) removeExerciseImage(before)
+      if (before?.image_url && before.image_url !== up.url) removeExerciseImage(before.image_url, before.image_public_id)
       setForm(VACIO); setFile(null); setPreview(null); setMode(null); load()
     } catch (err) {
+      // Si la subida salió bien pero no se pudo guardar, no dejamos la foto huérfana
+      if (subida?.publicId) removeExerciseImage(subida.url, subida.publicId)
       setError(err.message)
     } finally {
       setSaving(false)
@@ -93,10 +105,10 @@ export default function Exercises() {
     load()
   }
   const del = async (id) => {
-    const img = list.find((x) => x.id === id)?.image_url
+    const ex = list.find((x) => x.id === id)
     const { error } = await supabase.from(T.exercises).delete().eq('id', id)
     if (error) setError(error.code === '23503' ? 'No se puede borrar: el ejercicio se usa en algún entrenamiento. Archivalo para ocultarlo del buscador.' : error.message)
-    else { if (img) removeExerciseImage(img); load() }
+    else { if (ex?.image_url) removeExerciseImage(ex.image_url, ex.image_public_id); load() }
   }
   const toggleArchive = async (x) => {
     setError('')
@@ -109,7 +121,7 @@ export default function Exercises() {
       load()
     }
   }
-  const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '', image_url: x.image_url ?? null }); setFile(null); setPreview(null); setMode('manual') }
+  const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '', image_url: x.image_url ?? null, image_public_id: x.image_public_id ?? null }); setFile(null); setPreview(null); setMode('manual') }
   const toggle = (m) => { setForm(VACIO); setFile(null); setPreview(null); setMode(mode === m ? null : m) }
   const shown = preview ?? form.image_url
   const active = list.filter((x) => x.is_active !== false)

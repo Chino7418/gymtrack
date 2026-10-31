@@ -11,7 +11,7 @@ import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import RestTimerBar from '../components/RestTimerBar'
 import { useAuth } from '../context/AuthContext'
-import { insertExercise, uploadExerciseImage } from '../lib/images'
+import { insertExercise, uploadExerciseImage, removeExerciseImage } from '../lib/images'
 import { readWorkoutDraft, writeWorkoutDraft, clearWorkoutDraft } from '../lib/workoutDraft'
 
 const emptySet = () => ({ weight_kg: '', reps: '', notes: '', done: false })
@@ -180,9 +180,10 @@ export default function WorkoutForm() {
     const existing = catalog.find((c) => norm(c.name) === norm(name))
     if (existing) { await addItem(existing); return }
     try {
-      const image_url = file ? await uploadExerciseImage(file, user.id) : null
-      const { data, error } = await insertExercise({ name, muscle_group, image_url, user_id: user.id })
-      if (error) return error.message
+      const up = file ? await uploadExerciseImage(file, user.id) : null
+      const { data, error } = await insertExercise({ name, muscle_group, image_url: up?.url ?? null, image_public_id: up?.publicId ?? null, user_id: user.id })
+      // Si no se pudo guardar el ejercicio, la foto recién subida no queda huérfana
+      if (error) { if (up?.publicId) removeExerciseImage(up.url, up.publicId); return error.message }
       setCatalog((c) => [...c, data])
       await addItem(data)
     } catch (err) {
