@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { CATEGORIAS, ejerciciosPorCategoria } from '../lib/wger'
 import { ErrorMsg } from './Layout'
 import { grupoLabel } from '../lib/muscles'
@@ -44,7 +45,7 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
 
   return (
     <div className="card card-body p-3 mb-3">
-      <div className="d-flex flex-wrap gap-2 mb-2" role="group" aria-label="Categorías">
+      <div className="picker-chips mb-2" role="group" aria-label="Categorías">
         {includeMine && chip(MIOS, 'Mis ejercicios')}
         {CATEGORIAS.map((c) => chip(c.id, c.label))}
       </div>
@@ -71,13 +72,13 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
                         ? <img src={x.thumb} alt="" className="ex-thumb" loading="lazy" />
                         : <span className="ex-thumb ex-thumb-empty">{x.name[0]}</span>}
                       <span className="min-w-0">
-                        <span className="d-block text-truncate" lang={x.spanish === false ? 'en' : undefined}>{x.name}{x.spanish === false && <small className="text-muted ms-1">(EN)</small>}</span>
+                        <span className="d-block line-2" lang={x.spanish === false ? 'en' : undefined}>{x.name}{x.spanish === false && <small className="text-muted ms-1">(EN)</small>}</span>
                         <small className="text-muted d-block text-truncate">{grupoLabel(x.muscle_group)}{x.equipment && ` · ${x.equipment}`}</small>
                       </span>
                     </button>
                     {markAdded && added.has(norm(x.name))
                       ? <span className="badge text-bg-success flex-none">Agregado</span>
-                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap flex-none" disabled={picking === x.id} onClick={() => pick(x)} aria-label={`Agregar ${x.name}`}>+ Agregar</button>}
+                      : <button type="button" className="btn btn-sm btn-outline-primary text-nowrap flex-none pick-btn" disabled={picking === x.id} onClick={() => pick(x)} aria-label={`Agregar ${x.name}`}><Plus size={18} aria-hidden="true" /><span className="d-none d-md-inline">Agregar</span></button>}
                   </div>
                   {open === x.id && (
                     <div className="ex-detail mt-2">

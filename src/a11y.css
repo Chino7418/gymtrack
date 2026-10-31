@@ -108,3 +108,34 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 .acc-head-inline { padding: 0; min-height: 0; justify-content: flex-start; }
 .acc-title { display: block; font-weight: 700; }
 .acc-sub { display: block; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Buscador de ejercicios: categorías en una sola fila que se desliza de costado */
+.picker-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+@media (max-width: 767.98px) {
+  .picker-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -1rem; padding-inline: 1rem; scroll-padding-inline: 1rem; }
+  .picker-chips::-webkit-scrollbar { display: none; }
+  .picker-chips .chip { flex: none; }
+  .pick-btn { width: 44px; padding: 0; }
+}
+.line-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.25; }
+
+/* Acciones del formulario de entrenamiento: en celular quedan fijas arriba de la barra inferior */
+.form-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+@media (max-width: 767.98px) {
+  .form-actions {
+    position: sticky; bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px)); z-index: 5;
+    display: grid; grid-template-columns: 1fr 1fr; margin-inline: -0.75rem; padding: 0.6rem 0.75rem;
+    background: var(--nav-bg); border-top: 1px solid var(--line); border-radius: 0.9rem 0.9rem 0 0;
+  }
+  .form-actions .fa-save { grid-column: 1 / -1; }
+  body:has(.tabbar-hidden) .form-actions { bottom: 0; }
+}
+
+/* Buscador como pantalla aparte en celular: al elegir un ejercicio se cierra y se vuelve al entrenamiento */
+.picker-sheet { position: fixed; inset: 0; z-index: 1050; display: flex; flex-direction: column; background: var(--bg); animation: sheet-in 0.25s cubic-bezier(.2, .8, .2, 1) both; }
+.picker-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem 0.75rem; border-bottom: 1px solid var(--line); background: var(--nav-bg); }
+.picker-sheet-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0.75rem 0.75rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
+.picker-sheet-body > .card { border: 0; box-shadow: none; background: transparent; padding: 0.25rem !important; }
+body.sheet-open { overflow: hidden; }
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.form-actions .btn { gap: 0.35rem; }

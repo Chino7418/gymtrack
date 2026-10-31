@@ -4,12 +4,13 @@
 :root { --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-spring: cubic-bezier(.2, .9, .3, 1.25); }
 
 /* Entrada de cada pantalla (el contenedor cambia de key con la ruta) */
-.page-enter { animation: page-in 0.32s var(--ease-out) both; }
+/* fill "backwards": al terminar no queda ningún transform aplicado (si quedara, encerraría a los position: fixed de adentro, como el buscador) */
+.page-enter { animation: page-in 0.32s var(--ease-out) backwards; }
 @keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* Tarjetas y renglones que entran escalonados */
 .row > [class*="col"] > .stat, .list-group-item, main > form > section.card, .timer {
-  animation: rise-in 0.36s var(--ease-out) both;
+  animation: rise-in 0.36s var(--ease-out) backwards;
 }
 .row > [class*="col"]:nth-child(2) > .stat { animation-delay: 0.05s; }
 .row > [class*="col"]:nth-child(3) > .stat { animation-delay: 0.1s; }
@@ -22,7 +23,7 @@
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* Acordeón: el contenido se despliega deslizando */
-.acc-anim { animation: unfold 0.26s var(--ease-out) both; transform-origin: top; }
+.acc-anim { animation: unfold 0.26s var(--ease-out) backwards; transform-origin: top; }
 @keyframes unfold { from { opacity: 0; transform: translateY(-6px) scaleY(0.97); } to { opacity: 1; transform: none; } }
 .acc-head svg { transition: transform 0.2s var(--ease-out); }
 .acc-head:active svg { transform: translateY(2px); }
@@ -41,7 +42,7 @@
 .seg-item.active { animation: pill-in 0.28s var(--ease-spring) both; }
 
 /* Mensajes: entran deslizando */
-.alert { animation: rise-in 0.28s var(--ease-out) both; }
+.alert { animation: rise-in 0.28s var(--ease-out) backwards; }
 
 /* Cambio de tema: los colores pasan suave en vez de saltar */
 body, .card, .list-group, .app-navbar, .tabbar, .form-control, .form-select {

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
 import { buildSets, quickError, quickIssue, summarize, describe, itemSummary } from '../lib/sets'
 import useMediaQuery from '../lib/useMediaQuery'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Plus } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
@@ -35,10 +36,11 @@ export default function WorkoutForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [picking, setPicking] = useState(!id)
   const [notFound, setNotFound] = useState(false)
   // Celular: acordeón. Solo una sección abierta ('info' = datos del entrenamiento, o el índice del ejercicio)
   const mobile = useMediaQuery('(max-width: 767.98px)')
+  const [picking, setPicking] = useState(!id && !mobile)
+  const justAdded = useRef(false)
   const [open, setOpen] = useState(id ? null : 'info')
   const isOpen = (k) => !mobile || open === k
   const toggle = (k) => setOpen(open === k ? null : k)
@@ -124,8 +126,22 @@ export default function WorkoutForm() {
     // Se precarga lo de la última vez; si es la primera, carga rápida vacía
     // El ejercicio nuevo queda abierto y se pliega lo demás
     setOpen(count.current)
+    if (mobile) { setPicking(false); justAdded.current = true }
     setItems((list) => [...list, prev?.sets.length ? toItem(ex.id, prev.sets, { prev }) : { ...toItem(ex.id, []), mode: 'quick', quick: emptyQuick() }])
   }
+  // Después de agregar desde la pantalla del buscador, se lleva a la vista la card del ejercicio nuevo
+  useEffect(() => {
+    if (!justAdded.current || typeof open !== 'number') return
+    justAdded.current = false
+    requestAnimationFrame(() => document.getElementById(`ex-${open}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
+  }, [open, items.length])
+  // Con el buscador a pantalla completa, la página de atrás no scrollea
+  useEffect(() => {
+    const sheet = mobile && picking
+    document.body.classList.toggle('sheet-open', sheet)
+    return () => document.body.classList.remove('sheet-open')
+  }, [mobile, picking])
+
   const removeItem = (i) => {
     setItems(items.filter((_, k) => k !== i))
     if (open === i) setOpen(null)
@@ -320,11 +336,19 @@ export default function WorkoutForm() {
         )
       })}
 
-      {picking && <ExercisePicker mine={catalog} onPick={addExercise} includeMine />}
+      {picking && (mobile ? createPortal(
+        <div className="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="picker-title" onKeyDown={(e) => e.key === 'Escape' && setPicking(false)}>
+          <div className="picker-sheet-head">
+            <h2 id="picker-title" className="h5 m-0">Agregar ejercicio</h2>
+            <button type="button" className="btn btn-outline-secondary" onClick={() => setPicking(false)} aria-label="Cerrar y volver al entrenamiento" autoFocus><X size={20} aria-hidden="true" /></button>
+          </div>
+          <div className="picker-sheet-body"><ExercisePicker mine={catalog} onPick={addExercise} includeMine /></div>
+        </div>, document.body
+      ) : <ExercisePicker mine={catalog} onPick={addExercise} includeMine />)}
 
-      <div className="d-flex gap-2 flex-wrap">
-        <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking ? 'Cerrar buscador' : 'Agregar ejercicio'}</button>
-        <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
+      <div className="form-actions">
+        <button className="btn btn-primary fa-save" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
+        <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking && !mobile ? 'Cerrar buscador' : <><Plus size={18} aria-hidden="true" />Agregar ejercicio</>}</button>
         <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/workouts')}>Cancelar</button>
       </div>
     </form>
