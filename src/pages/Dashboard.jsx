@@ -133,8 +133,8 @@ export default function Dashboard() {
               </div>
               <div className="d-flex align-items-center gap-2 flex-none">
                 {data.lastWorkout && (
-                  <Link to={`/workouts/new?repeat=${data.lastWorkout.id}`} className="btn btn-outline-secondary" aria-label="Repetir último entrenamiento" title="Repetir último entrenamiento">
-                    <RotateCcw size={18} aria-hidden="true" />
+                  <Link to={`/workouts/new?repeat=${data.lastWorkout.id}`} className="btn btn-outline-secondary d-inline-flex align-items-center gap-1 text-nowrap" aria-label="Repetir último entrenamiento">
+                    <RotateCcw size={18} aria-hidden="true" />Repetir
                   </Link>
                 )}
                 <Link to="/workouts/new" className="btn btn-primary text-nowrap d-inline-flex align-items-center gap-1">

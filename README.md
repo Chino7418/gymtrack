@@ -61,6 +61,15 @@ npx vitest run -t "pirámide"              # solo los tests cuyo nombre coincide
 4. Build: `npm run build`. Output: `dist`.
 5. Configurar auth redirect a dominio Vercel.
 
+## 7. PWA (instalar en el celular)
+
+La app se puede instalar como aplicación: en Android/Chrome aparece "Instalar app" en el menú y en iPhone/Safari "Agregar a pantalla de inicio".
+
+- `public/manifest.webmanifest`: nombre, colores, íconos 192/512 y atajos a "Nuevo entrenamiento" y "Asistencia".
+- `public/sw.js`: precachea el shell, responde la navegación con red primero (y el shell cacheado si no hay conexión) y los assets con stale-while-revalidate. No toca Supabase, Google Fonts ni wger.
+- El service worker se registra solo en producción (`src/main.jsx`), así que en `npm run dev` no hay caché.
+- Si cambiás la estrategia del service worker, subí la constante `CACHE` en `sw.js` para invalidar la caché vieja.
+
 ## Seguridad
 
 - RLS activado en todas las tablas. Cada usuario solo accede a sus propios datos.

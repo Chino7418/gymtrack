@@ -4,7 +4,9 @@ import { PRESETS, fmt, useRestTimer } from '../lib/useRestTimer'
 
 // Barra compacta para usar el descanso sin salir del formulario de entrenamiento.
 // Expone restart(segundos) para que el formulario arranque el descanso al marcar una serie.
-const RestTimerBar = forwardRef(function RestTimerBar(_, ref) {
+// Con onlyWhenActive se oculta sola mientras el descanso no está corriendo ni en pausa
+// (así el Layout la puede mostrar en cualquier pantalla sin ocupar lugar de más).
+const RestTimerBar = forwardRef(function RestTimerBar({ onlyWhenActive = false } = {}, ref) {
   const timer = useRestTimer()
   const latest = useRef(timer)
   latest.current = timer
@@ -13,6 +15,7 @@ const RestTimerBar = forwardRef(function RestTimerBar(_, ref) {
   }), [])
 
   const { total, left, running, paused, state, caption, announce, once } = timer
+  if (onlyWhenActive && !running && !paused) return null
   return (
     <div className={`rest-bar rest-${state} mb-3`} role="group" aria-label="Temporizador de descanso">
       <Timer size={18} aria-hidden="true" />

@@ -1,14 +1,28 @@
 {
+  "id": "/",
   "name": "Una Más",
   "short_name": "Una Más",
   "description": "Tus entrenamientos, en un solo lugar",
+  "lang": "es-AR",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0d0d0f",
   "theme_color": "#0d0d0f",
+  "categories": ["health", "fitness", "lifestyle"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo entrenamiento",
+      "short_name": "Nuevo",
+      "url": "/workouts/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    { "name": "Asistencia", "short_name": "Asistencia", "url": "/attendance" }
   ]
 }

@@ -3,6 +3,7 @@ import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom'
 import { House, Dumbbell, CalendarCheck, Scale, UserRound, Sun, Moon, SunMoon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { PREFS, PREF_LABEL, getPref, setPref } from '../lib/theme'
+import RestTimerBar from './RestTimerBar'
 
 export function Protected() {
   const { session, loading } = useAuth()
@@ -32,6 +33,9 @@ function Layout() {
     return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut) }
   }, [])
   const first = useRef(true)
+  // Inicio y el formulario de entrenamiento ya tienen el temporizador en la página;
+  // en el resto de las pantallas aparece la barra global, solo mientras el descanso está activo.
+  const inlineTimer = pathname === '/' || pathname.startsWith('/workouts/')
 
   // Al cambiar de página: título de la pestaña y foco en el h1 (para lectores de pantalla)
   useEffect(() => {
@@ -64,7 +68,10 @@ function Layout() {
           </div>
         </div>
       </nav>
-      <main id="main" className="container py-4 flex-grow-1 has-tabbar"><div key={pathname} className="page-enter"><Outlet /></div></main>
+      <main id="main" className="container py-4 flex-grow-1 has-tabbar">
+        {!inlineTimer && <RestTimerBar onlyWhenActive />}
+        <div key={pathname} className="page-enter"><Outlet /></div>
+      </main>
       <nav className={`tabbar d-md-none ${typing ? 'tabbar-hidden' : ''}`} aria-label="Secciones">
         {TABS.map(([to, label, Icon]) => (
           <NavLink key={to} end={to === '/'} to={to}

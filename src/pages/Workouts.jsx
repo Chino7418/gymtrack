@@ -36,18 +36,20 @@ export default function Workouts() {
       {loading ? <p role="status">Cargando…</p> : list.length === 0 ? <p className="text-muted">Todavía no registraste entrenamientos.</p> : (
         <ul className="list-group">
           {list.map((w) => (
-            <li key={w.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
-              <span className="min-w-0">
-                <strong className="d-block text-truncate">{w.name}</strong>
-                <small className="text-muted">{dayjs(w.workout_date).format('ddd DD/MM/YYYY')}</small>
-              </span>
-              <span className="d-flex gap-2 flex-none">
-                <Link className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" to={`/workouts/new?repeat=${w.id}`} aria-label={`Repetir ${w.name}`} title="Repetir entrenamiento">
-                  <RotateCcw size={16} aria-hidden="true" /><span className="d-none d-lg-inline">Repetir</span>
-                </Link>
-                <Link className="btn btn-sm btn-outline-primary" to={`/workouts/${w.id}`} aria-label={`Editar ${w.name}`}>Editar</Link>
-                <ConfirmButton what={w.name} onConfirm={() => del(w.id)} />
-              </span>
+            <li key={w.id} className="list-group-item">
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span className="min-w-0 flex-grow-1">
+                  <strong className="d-block text-truncate">{w.name}</strong>
+                  <small className="text-muted">{dayjs(w.workout_date).format('ddd DD/MM/YYYY')}</small>
+                </span>
+                <span className="d-flex flex-wrap gap-2">
+                  <Link className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" to={`/workouts/new?repeat=${w.id}`} aria-label={`Repetir ${w.name}`}>
+                    <RotateCcw size={16} aria-hidden="true" />Repetir
+                  </Link>
+                  <Link className="btn btn-sm btn-outline-primary" to={`/workouts/${w.id}`} aria-label={`Editar ${w.name}`}>Editar</Link>
+                  <ConfirmButton what={w.name} onConfirm={() => del(w.id)} />
+                </span>
+              </div>
             </li>
           ))}
         </ul>
