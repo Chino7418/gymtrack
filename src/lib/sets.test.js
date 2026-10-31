@@ -1,5 +1,5 @@
 import { describe as suite, it, expect } from 'vitest'
-import { buildSets, quickError, quickIssue, summarize, describe, MAX_SERIES } from './sets'
+import { buildSets, quickError, quickIssue, summarize, describe, itemSummary, detailValid, MAX_SERIES } from './sets'
 
 const pesos = (sets) => sets.map((s) => s.weight_kg)
 
@@ -191,5 +191,29 @@ suite('quickIssue', () => {
   })
   it('informa el primer problema en orden: series, reps, peso', () => {
     expect(quickIssue({ series: '', reps: '', min: '', max: '' }).field).toBe('series')
+  })
+})
+
+suite('itemSummary (renglón plegado del acordeón)', () => {
+  it('resume la carga rápida completa', () => {
+    expect(itemSummary({ mode: 'quick', quick: { series: '4', reps: '10', min: '30', max: '45' }, sets: [] })).toBe('4×10 · 30→45 kg')
+  })
+  it('devuelve null si la carga rápida está incompleta', () => {
+    expect(itemSummary({ mode: 'quick', quick: { series: '4', reps: '', min: '30', max: '' }, sets: [] })).toBeNull()
+  })
+  it('resume series detalladas válidas, aunque sean irregulares', () => {
+    expect(itemSummary({ mode: 'detail', quick: {}, sets: [{ weight_kg: 40, reps: 10, notes: '' }, { weight_kg: 45, reps: 8, notes: '' }] })).toBe('40×10 · 45×8')
+  })
+  it('devuelve null si una serie detallada es inválida o no hay series', () => {
+    expect(itemSummary({ mode: 'detail', quick: {}, sets: [{ weight_kg: 40, reps: '8.5', notes: '' }] })).toBeNull()
+    expect(itemSummary({ mode: 'detail', quick: {}, sets: [] })).toBeNull()
+  })
+})
+
+suite('detailValid', () => {
+  it('acepta peso 0 y rechaza reps vacías o negativas', () => {
+    expect(detailValid([{ weight_kg: 0, reps: 12 }])).toBe(true)
+    expect(detailValid([{ weight_kg: 20, reps: '' }])).toBe(false)
+    expect(detailValid([{ weight_kg: -1, reps: 5 }])).toBe(false)
   })
 })

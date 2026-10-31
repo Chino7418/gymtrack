@@ -1,0 +1,55 @@
+/* Una Más · animaciones. Cortas (150–350 ms) y con salida suave; con "reducir movimiento"
+   las apaga la regla global de a11y.css. Sin colores propios. */
+
+:root { --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-spring: cubic-bezier(.2, .9, .3, 1.25); }
+
+/* Entrada de cada pantalla (el contenedor cambia de key con la ruta) */
+.page-enter { animation: page-in 0.32s var(--ease-out) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Tarjetas y renglones que entran escalonados */
+.row > [class*="col"] > .stat, .list-group-item, main > form > section.card, .timer {
+  animation: rise-in 0.36s var(--ease-out) both;
+}
+.row > [class*="col"]:nth-child(2) > .stat { animation-delay: 0.05s; }
+.row > [class*="col"]:nth-child(3) > .stat { animation-delay: 0.1s; }
+.timer { animation-delay: 0.12s; }
+.list-group-item:nth-child(2) { animation-delay: 0.03s; }
+.list-group-item:nth-child(3) { animation-delay: 0.06s; }
+.list-group-item:nth-child(4) { animation-delay: 0.09s; }
+.list-group-item:nth-child(5) { animation-delay: 0.12s; }
+.list-group-item:nth-child(n+6) { animation-delay: 0.15s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Acordeón: el contenido se despliega deslizando */
+.acc-anim { animation: unfold 0.26s var(--ease-out) both; transform-origin: top; }
+@keyframes unfold { from { opacity: 0; transform: translateY(-6px) scaleY(0.97); } to { opacity: 1; transform: none; } }
+.acc-head svg { transition: transform 0.2s var(--ease-out); }
+.acc-head:active svg { transform: translateY(2px); }
+
+/* Botones: se hunden al tocarlos */
+.btn, .seg-item, .tab, .acc-head, .stat { transition: transform 0.12s var(--ease-out), background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s; }
+.btn:active:not(:disabled), .seg-item:active, .stat:active { transform: scale(0.97); }
+
+/* Barra inferior: la pastilla de la pestaña activa aparece con rebote y el ícono salta */
+.tab.active .tab-pill { animation: pill-in 0.32s var(--ease-spring) both; }
+.tab.active .tab-pill svg { animation: icon-hop 0.4s var(--ease-spring) 0.05s both; }
+@keyframes pill-in { from { transform: scaleX(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes icon-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+
+/* Solapa activa (Entrenamientos / Mis ejercicios) */
+.seg-item.active { animation: pill-in 0.28s var(--ease-spring) both; }
+
+/* Mensajes: entran deslizando */
+.alert { animation: rise-in 0.28s var(--ease-out) both; }
+
+/* Cambio de tema: los colores pasan suave en vez de saltar */
+body, .card, .list-group, .app-navbar, .tabbar, .form-control, .form-select {
+  transition: background-color 0.3s var(--ease-out), border-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+
+/* Temporizador: el anillo late suave mientras corre y "salta" al terminar */
+.timer-run .timer-ring { animation: breathe 2.4s ease-in-out infinite; }
+.timer-done .timer-ring { animation: done-pop 0.5s var(--ease-spring) both; }
+@keyframes breathe { 50% { transform: scale(1.02); } }
+@keyframes done-pop { 0% { transform: scale(0.92); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }

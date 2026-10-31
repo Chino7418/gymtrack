@@ -39,6 +39,6 @@ describe('weightTrend', () => {
   })
 
   it('el texto accesible describe el cambio en palabras', () => {
-    expect(weightTrend(79.4, 80, 75).label).toBe('Bajaste 0.6 kg: estás más cerca de tu objetivo')
+    expect(weightTrend(79.4, 80, 75).label).toBe('Bajaste 0.6 kg desde tu primer registro: estás más cerca de tu objetivo')
   })
 })

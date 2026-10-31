@@ -6,8 +6,9 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import RestTimer from '../components/RestTimer'
-import { Scale, Target, Flame, Plus, Trophy, Medal, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Scale, Target, Flame, Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { weightTrend } from '../lib/progress'
+import WeightMedal from '../components/WeightMedal'
 import './dashboard.css'
 
 export default function Dashboard() {
@@ -20,18 +21,21 @@ export default function Dashboard() {
   const load = async () => {
     const start = dayjs().startOf('month').format('YYYY-MM-DD')
     const end = dayjs().endOf('month').format('YYYY-MM-DD')
-    const [w, p, m, tot, last] = await Promise.all([
-      supabase.from(T.weights).select('*').order(C.weightDate, { ascending: false }).limit(2),
+    const [w, first, p, m, tot, last] = await Promise.all([
+      supabase.from(T.weights).select('*').order(C.weightDate, { ascending: false }).limit(1),
+      // Peso inicial: el primer registro, contra el que se mide el progreso
+      supabase.from(T.weights).select('*').order(C.weightDate, { ascending: true }).limit(1),
       supabase.from(T.profiles).select('*').eq('id', user.id).maybeSingle(),
       supabase.from(T.attendances).select('id', { count: 'exact', head: true }).gte('attendance_date', start).lte('attendance_date', end),
       supabase.from(T.attendances).select('id', { count: 'exact', head: true }),
       supabase.from(T.workouts).select('id,name,workout_date').order('workout_date', { ascending: false }).limit(1),
     ])
-    const err = [w, p, m, tot, last].find((r) => r.error)?.error
+    const err = [w, first, p, m, tot, last].find((r) => r.error)?.error
     if (err) setError(err.message)
     setData({
       current: w.data?.[0] ?? null,
-      previous: w.data?.[1] ?? null,
+      // Si hay un solo registro, el inicial y el actual son el mismo: no hay progreso que mostrar
+      initial: first.data?.[0] && first.data[0].id !== w.data?.[0]?.id ? first.data[0] : null,
       goal: p.data?.goal_weight_kg ?? null,
       name: p.data?.first_name ?? '',
       month: m.count ?? 0,
@@ -53,11 +57,12 @@ export default function Dashboard() {
 
   if (!data) return <p role="status">Cargando…</p>
   const cur = data.current ? Number(data.current[C.weightValue]) : null
-  const prev = data.previous ? Number(data.previous[C.weightValue]) : null
+  const initial = data.initial ? Number(data.initial[C.weightValue]) : null
   const goal = data.goal != null ? Number(data.goal) : null
   const diff = cur != null && goal != null ? goal - cur : null
-  const trend = weightTrend(cur, prev, goal)
-  const TrendIcon = { goal: Medal, award: Trophy, down: TrendingDown, up: TrendingUp, away: cur > prev ? TrendingUp : TrendingDown, same: Minus }[trend?.kind]
+  const trend = weightTrend(cur, initial, goal)
+  const medal = trend?.kind === 'award' || trend?.kind === 'goal'
+  const TrendIcon = { down: TrendingDown, up: TrendingUp, away: cur > initial ? TrendingUp : TrendingDown, same: Minus }[trend?.kind]
 
   const pesoSub = cur == null ? 'Registrar' : dayjs(data.current[C.weightDate]).format('DD/MM')
   const objSub = goal == null ? 'Definir'
@@ -75,11 +80,16 @@ export default function Dashboard() {
             <span className="stat-label stat-ic"><Scale size={14} aria-hidden="true" />Peso</span>
             <span className="stat-value">{cur ?? '—'}{cur != null && <small>kg</small>}</span>
             <span className="stat-sub">{pesoSub}</span>
-            {trend && (
+            {trend && (medal ? (
+              <span className={`weight-medal wm-${trend.kind}`} role="img" aria-label={trend.label} title={trend.label}>
+                <WeightMedal gold={trend.kind === 'goal'} />
+                <span className="wm-text"><b>{trend.text}</b>{trend.kind === 'award' && <small>desde el inicio</small>}</span>
+              </span>
+            ) : (
               <span className={`weight-badge wb-${trend.kind}`} role="img" aria-label={trend.label} title={trend.label}>
                 <TrendIcon size={12} aria-hidden="true" />{trend.text}
               </span>
-            )}
+            ))}
           </Link>
         </div>
         <div className="col-4">

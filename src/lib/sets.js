@@ -52,3 +52,13 @@ export function describe(sets) {
   if (!q) return sets.map((s) => `${Number(s.weight_kg)}×${s.reps}`).join(' · ')
   return `${q.series}×${q.reps} · ${q.max ? `${q.min}→${q.max}` : q.min} kg`
 }
+
+// Series detalladas válidas: al menos una, reps enteras desde 1 y peso no negativo
+export const detailValid = (sets) => sets.length > 0 && sets.every((s) =>
+  s.reps !== '' && Number.isInteger(Number(s.reps)) && Number(s.reps) >= 1 && s.weight_kg !== '' && Number(s.weight_kg) >= 0)
+
+// Resumen de un ejercicio del formulario para mostrarlo plegado ("4×10 · 30→45 kg"), o null si está incompleto
+export function itemSummary(it) {
+  if (it.mode === 'quick') return quickError(it.quick) ? null : describe(buildSets(it.quick))
+  return detailValid(it.sets) ? describe(it.sets) : null
+}

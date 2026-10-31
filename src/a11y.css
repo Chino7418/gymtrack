@@ -99,3 +99,12 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 .quick-field .form-control[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
 .text-danger-emphasis { color: var(--danger-text) !important; }
 .timer-sound { padding: 0.25rem 0.5rem; line-height: 1; }
+
+/* Acordeón (formulario de entrenamiento y lista de pesos): renglón con resumen que se despliega */
+.acc-h { font-size: inherit; }
+.acc-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; width: 100%; min-height: 52px; padding: 0.6rem 1rem; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.acc-head:disabled { cursor: default; opacity: 1; }
+.acc-head svg { flex: none; color: var(--muted); }
+.acc-head-inline { padding: 0; min-height: 0; justify-content: flex-start; }
+.acc-title { display: block; font-weight: 700; }
+.acc-sub { display: block; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -64,7 +64,7 @@ function Layout() {
           </div>
         </div>
       </nav>
-      <main id="main" className="container py-4 flex-grow-1 has-tabbar"><Outlet /></main>
+      <main id="main" className="container py-4 flex-grow-1 has-tabbar"><div key={pathname} className="page-enter"><Outlet /></div></main>
       <nav className={`tabbar d-md-none ${typing ? 'tabbar-hidden' : ''}`} aria-label="Secciones">
         {TABS.map(([to, label, Icon]) => (
           <NavLink key={to} end={to === '/'} to={to}

@@ -7,6 +7,7 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import ConfirmButton from '../components/ConfirmButton'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -33,18 +34,44 @@ export default function Weight() {
   }
   useEffect(() => { load() }, [])
 
+  const invalid = (v, d) => {
+    const n = Number(v)
+    if (!(n >= 20 && n <= 400)) return 'Ingresá un peso entre 20 y 400 kg'
+    if (!d) return 'Elegí la fecha'
+    if (dayjs(d).isAfter(dayjs(), 'day')) return 'La fecha no puede ser futura'
+    return ''
+  }
   const add = async (e) => {
     e.preventDefault(); setError('')
+    const msg = invalid(value, date)
+    if (msg) return setError(msg)
     const n = Number(value)
-    if (!(n >= 20 && n <= 400)) return setError('Ingresá un peso entre 20 y 400 kg')
-    if (dayjs(date).isAfter(dayjs(), 'day')) return setError('La fecha no puede ser futura')
     const { error } = await supabase.from(T.weights).insert({ user_id: user.id, [C.weightValue]: n, [C.weightDate]: date })
     if (error) return setError(error.message)
     setValue(''); load()
   }
   const del = async (id) => {
     const { error } = await supabase.from(T.weights).delete().eq('id', id)
-    if (error) setError(error.message); else load()
+    if (error) setError(error.message); else { setOpenId(null); load() }
+  }
+
+  // Cada registro es un renglón que se despliega para editar fecha, peso y nota
+  const [openId, setOpenId] = useState(null)
+  const [edit, setEdit] = useState(null)
+  const openRow = (r) => {
+    if (openId === r.id) { setOpenId(null); return }
+    setOpenId(r.id)
+    setEdit({ value: String(r[C.weightValue]), date: r[C.weightDate], notes: r.notes ?? '' })
+  }
+  const saveEdit = async (e, id) => {
+    e.preventDefault(); setError('')
+    const msg = invalid(edit.value, edit.date)
+    if (msg) return setError(msg)
+    const { error } = await supabase.from(T.weights)
+      .update({ [C.weightValue]: Number(edit.value), [C.weightDate]: edit.date, notes: edit.notes.trim() || null, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) return setError(error.message)
+    setOpenId(null); load()
   }
 
   const data = {
@@ -66,12 +93,35 @@ export default function Weight() {
         <>
           <div className="mb-4"><Line data={data} options={options} role="img" aria-label="Gráfico de evolución del peso; el detalle está en la lista de abajo" /></div>
           <ul className="list-group">
-            {[...rows].reverse().map((r) => (
-              <li key={r.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
-                <span>{dayjs(r[C.weightDate]).format('DD/MM/YYYY')} · <strong>{r[C.weightValue]} kg</strong></span>
-                <ConfirmButton what={`el registro del ${dayjs(r[C.weightDate]).format('DD/MM')}`} onConfirm={() => del(r.id)} />
-              </li>
-            ))}
+            {[...rows].reverse().map((r) => {
+              const isOpen = openId === r.id
+              return (
+                <li key={r.id} className="list-group-item p-0">
+                  <button type="button" className="acc-head" onClick={() => openRow(r)} aria-expanded={isOpen} aria-controls={`w-${r.id}`}>
+                    <span className="min-w-0">
+                      <span className="acc-title">{r[C.weightValue]} kg</span>
+                      <span className="acc-sub">{dayjs(r[C.weightDate]).format('ddd DD/MM/YYYY')}{r.notes ? ` · ${r.notes}` : ''}</span>
+                    </span>
+                    {isOpen ? <ChevronUp size={20} aria-hidden="true" /> : <ChevronDown size={20} aria-hidden="true" />}
+                  </button>
+                  {isOpen && (
+                    <form id={`w-${r.id}`} className="acc-body acc-anim row g-2 px-3 pb-3" onSubmit={(e) => saveEdit(e, r.id)} noValidate>
+                      <div className="col-6"><label className="form-label" htmlFor={`we-v-${r.id}`}>Peso (kg)</label>
+                        <input id={`we-v-${r.id}`} type="number" inputMode="decimal" step="any" className="form-control" value={edit.value} onChange={(e) => setEdit({ ...edit, value: e.target.value })} /></div>
+                      <div className="col-6"><label className="form-label" htmlFor={`we-d-${r.id}`}>Fecha</label>
+                        <input id={`we-d-${r.id}`} type="date" max={dayjs().format('YYYY-MM-DD')} className="form-control" value={edit.date} onChange={(e) => setEdit({ ...edit, date: e.target.value })} /></div>
+                      <div className="col-12"><label className="form-label" htmlFor={`we-n-${r.id}`}>Nota <span className="text-muted small">(opcional)</span></label>
+                        <input id={`we-n-${r.id}`} className="form-control" placeholder="Ej.: en ayunas" value={edit.notes} onChange={(e) => setEdit({ ...edit, notes: e.target.value })} /></div>
+                      <div className="col-12 d-flex flex-wrap gap-2">
+                        <button className="btn btn-primary">Guardar</button>
+                        <button type="button" className="btn btn-outline-secondary" onClick={() => setOpenId(null)}>Cancelar</button>
+                        <span className="ms-auto"><ConfirmButton what={`el registro del ${dayjs(r[C.weightDate]).format('DD/MM')}`} onConfirm={() => del(r.id)} /></span>
+                      </div>
+                    </form>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </>
       )}

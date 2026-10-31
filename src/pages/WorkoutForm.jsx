@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
-import { buildSets, quickError, quickIssue, summarize, describe } from '../lib/sets'
+import { buildSets, quickError, quickIssue, summarize, describe, itemSummary } from '../lib/sets'
+import useMediaQuery from '../lib/useMediaQuery'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
@@ -35,6 +37,13 @@ export default function WorkoutForm() {
   const [saving, setSaving] = useState(false)
   const [picking, setPicking] = useState(!id)
   const [notFound, setNotFound] = useState(false)
+  // Celular: acordeón. Solo una sección abierta ('info' = datos del entrenamiento, o el índice del ejercicio)
+  const mobile = useMediaQuery('(max-width: 767.98px)')
+  const [open, setOpen] = useState(id ? null : 'info')
+  const isOpen = (k) => !mobile || open === k
+  const toggle = (k) => setOpen(open === k ? null : k)
+  const count = useRef(0)
+  count.current = items.length
 
   useEffect(() => {
     (async () => {
@@ -113,25 +122,34 @@ export default function WorkoutForm() {
     if (!ex) return false
     const prev = await lastSets(ex.id)
     // Se precarga lo de la última vez; si es la primera, carga rápida vacía
+    // El ejercicio nuevo queda abierto y se pliega lo demás
+    setOpen(count.current)
     setItems((list) => [...list, prev?.sets.length ? toItem(ex.id, prev.sets, { prev }) : { ...toItem(ex.id, []), mode: 'quick', quick: emptyQuick() }])
+  }
+  const removeItem = (i) => {
+    setItems(items.filter((_, k) => k !== i))
+    if (open === i) setOpen(null)
+    else if (typeof open === 'number' && open > i) setOpen(open - 1)
   }
   const exName = (exId) => catalog.find((c) => c.id === exId)?.[C.exerciseName] ?? 'Ejercicio'
 
   const save = async (e) => {
     e.preventDefault(); setError('')
-    if (!name.trim()) return setError('Poné un nombre al entrenamiento')
-    if (!date) return setError('Elegí la fecha del entrenamiento')
+    // Al fallar, se abre la sección con el problema (en celular puede estar plegada)
+    const fail = (section, msg) => { setOpen(section); setError(msg) }
+    if (!name.trim()) return fail('info', 'Poné un nombre al entrenamiento')
+    if (!date) return fail('info', 'Elegí la fecha del entrenamiento')
     if (items.length === 0) return setError('Agregá al menos un ejercicio')
     for (const [i, it] of items.entries()) {
-      if (!it.exercise_id) return setError(`Elegí el ejercicio #${i + 1}`)
+      if (!it.exercise_id) return fail(i, `Elegí el ejercicio #${i + 1}`)
       if (it.mode === 'quick') {
         const msg = quickError(it.quick)
-        if (msg) return setError(`${exName(it.exercise_id)}: ${msg}`)
+        if (msg) return fail(i, `${exName(it.exercise_id)}: ${msg}`)
       } else {
-        if (it.sets.length === 0) return setError(`${exName(it.exercise_id)}: agregá al menos una serie`)
+        if (it.sets.length === 0) return fail(i, `${exName(it.exercise_id)}: agregá al menos una serie`)
         for (const s of it.sets) {
           if (s.reps === '' || !Number.isInteger(Number(s.reps)) || Number(s.reps) < 1 || s.weight_kg === '' || Number(s.weight_kg) < 0)
-            return setError(`Revisá las series de ${exName(it.exercise_id)}: peso y repeticiones son obligatorios (repeticiones enteras desde 1, peso sin negativos)`)
+            return fail(i, `Revisá las series de ${exName(it.exercise_id)}: peso y repeticiones son obligatorios (repeticiones enteras desde 1, peso sin negativos)`)
         }
       }
     }
@@ -172,12 +190,25 @@ export default function WorkoutForm() {
     <form onSubmit={save} noValidate>
       <h1 className="h4 mb-3">{id ? 'Editar entrenamiento' : 'Nuevo entrenamiento'}</h1>
       <ErrorMsg error={error} />
-      <div className="row g-2 mb-3">
+      <section className="card mb-3" aria-labelledby="wf-info">
+        <h2 className="acc-h m-0">
+          <button type="button" id="wf-info" className="acc-head" onClick={() => toggle('info')} aria-expanded={isOpen('info')} aria-controls="wf-info-body" disabled={!mobile}>
+            <span className="min-w-0">
+              <span className="acc-title">Datos del entrenamiento</span>
+              {!isOpen('info') && <span className="acc-sub">{name.trim() || 'Sin nombre'} · {date ? dayjs(date).format('ddd DD/MM') : 'sin fecha'}</span>}
+            </span>
+            {mobile && (isOpen('info') ? <ChevronUp size={20} aria-hidden="true" /> : <ChevronDown size={20} aria-hidden="true" />)}
+          </button>
+        </h2>
+        {isOpen('info') && (
+      <div className={`row g-2 px-3 pb-3 ${mobile ? 'acc-anim' : ''}`} id="wf-info-body">
         <div className="col-12 col-md-6"><label className="form-label" htmlFor="wf-name">Nombre</label><input id="wf-name" className="form-control" placeholder="Ej.: Pecho y tríceps" aria-invalid={error.startsWith('Poné un nombre') || undefined} value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="col-12 col-md-6"><label className="form-label" htmlFor="wf-date">Fecha</label><input id="wf-date" type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
         <div className="col-12"><label className="form-label" htmlFor="wf-notes">Notas</label><textarea id="wf-notes" className="form-control" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         <div className="col-12 form-check ms-2"><input id="att" type="checkbox" className="form-check-input" checked={attend} onChange={(e) => setAttend(e.target.checked)} /><label htmlFor="att" className="form-check-label">Registrar asistencia ese día</label></div>
       </div>
+        )}
+      </section>
 
       {items.map((it, i) => {
         const exLabel = exName(it.exercise_id)
@@ -186,15 +217,35 @@ export default function WorkoutForm() {
         const issue = found && it.quick[found.field] !== '' ? found : null
         const preview = it.mode === 'quick' && !quickError(it.quick) ? buildSets(it.quick) : null
         const inv = (f) => (issue?.field === f ? true : undefined)
+        const summary = itemSummary(it)
+        // Plegado (solo celular): un renglón con el resumen; al tocarlo se despliega para editar
+        if (!isOpen(i)) return (
+          <section className="card mb-2" key={i} aria-labelledby={`ex-${i}`}>
+            <h2 className="acc-h m-0">
+              <button type="button" id={`ex-${i}`} className="acc-head" onClick={() => toggle(i)} aria-expanded="false" aria-controls={`exb-${i}`}>
+                <span className="min-w-0">
+                  <span className="acc-title text-truncate">{i + 1}. {exLabel}</span>
+                  <span className={`acc-sub ${summary ? '' : 'text-danger-emphasis'}`}>{summary ?? 'Falta completar'}{it.notes ? ' · con nota' : ''}</span>
+                </span>
+                <ChevronDown size={20} aria-hidden="true" />
+              </button>
+            </h2>
+          </section>
+        )
         return (
           <section className="card mb-3" key={i} aria-labelledby={`ex-${i}`}>
-            <div className="card-body p-3">
+            <div className={`card-body p-3 ${mobile ? 'acc-anim' : ''}`} id={`exb-${i}`}>
               <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                 <div className="min-w-0">
-                  <h2 id={`ex-${i}`} className="h6 fw-bold mb-0 text-truncate">{i + 1}. {exLabel}</h2>
+                  <h2 className="acc-h m-0">
+                    <button type="button" id={`ex-${i}`} className="acc-head acc-head-inline" onClick={() => toggle(i)} aria-expanded="true" aria-controls={`exb-${i}`} disabled={!mobile}>
+                      <span className="acc-title text-truncate">{i + 1}. {exLabel}</span>
+                      {mobile && <ChevronUp size={20} aria-hidden="true" />}
+                    </button>
+                  </h2>
                   {it.prev && <small className="text-muted">Última vez ({dayjs(it.prev.date).format('DD/MM')}): {describe(it.prev.sets)}</small>}
                 </div>
-                <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setItems(items.filter((_, k) => k !== i))} aria-label={`Quitar ${exLabel}`}>Quitar</button>
+                <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeItem(i)} aria-label={`Quitar ${exLabel}`}>Quitar</button>
               </div>
 
               {it.mode === 'quick' ? (
