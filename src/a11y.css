@@ -30,9 +30,15 @@
 /* Temporizador: en pantallas angostas los controles van debajo del anillo */
 .timer-body { display: flex; align-items: center; gap: 1rem; }
 .timer-controls { display: grid; gap: 0.6rem; flex: 1; min-width: 0; }
-@media (max-width: 399.98px) {
-  .timer-body { flex-direction: column; align-items: stretch; }
-  .timer-ring { align-self: center; }
+/* Temporizador compacto en celular: anillo chico a la izquierda y controles a la derecha */
+@media (max-width: 767.98px) {
+  .timer-body { gap: 0.75rem; }
+  :root .timer-ring { width: 96px; height: 96px; }
+  :root .timer-digits { font-size: 1.45rem; }
+  :root .timer-caption { font-size: 0.68rem; }
+  .timer-controls .btn { padding-inline: 0.6rem; }
+  .timer-controls .d-flex.flex-wrap { gap: 0.35rem !important; }
+  .timer-preset { padding-inline: 0.55rem !important; }
 }
 
 /* Asistencia: calendario con días de 44px y marca que no depende del color */
@@ -98,7 +104,7 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 .quick-preview { font-variant-numeric: tabular-nums; }
 .quick-field .form-control[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
 .text-danger-emphasis { color: var(--danger-text) !important; }
-.timer-sound { padding: 0.25rem 0.5rem; line-height: 1; }
+.timer-sound { padding: 0.25rem 0.5rem; line-height: 1; border-color: transparent; }
 
 /* Acordeón (formulario de entrenamiento y lista de pesos): renglón con resumen que se despliega */
 .acc-h { font-size: inherit; }

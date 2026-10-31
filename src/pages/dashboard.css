@@ -1,5 +1,6 @@
 /* Dashboard compacto: pensado primero para celular */
-.stat { display: block; padding: 0.7rem 0.75rem; text-decoration: none; color: inherit; transition: border-color 0.15s; }
+/* Las tres tarjetas alineadas arriba (el botón Objetivo centraba su contenido) */
+.stat { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 0.7rem 0.75rem; text-decoration: none; color: inherit; transition: border-color 0.15s; }
 .stat:hover { color: inherit; border-color: var(--line-strong); }
 button.stat { font: inherit; text-align: left; width: 100%; }
 .stat-label, .stat-value, .stat-sub { display: block; }
@@ -61,5 +62,5 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 .medal-gold .medal-ring { fill: none; }
 .wm-text { display: grid; line-height: 1.1; min-width: 0; }
 .wm-text b { font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.wm-text small { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wm-text small { font-size: 0.68rem; color: var(--muted); line-height: 1.15; }
 @keyframes medal-in { 0% { transform: rotate(-25deg) scale(0.4); opacity: 0; } 60% { transform: rotate(10deg) scale(1.08); opacity: 1; } 100% { transform: rotate(0) scale(1); } }
