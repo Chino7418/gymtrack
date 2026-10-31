@@ -6,7 +6,7 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import RestTimer from '../components/RestTimer'
-import { Scale, Target, Flame, Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Scale, Target, Flame, Plus, RotateCcw, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { weightTrend } from '../lib/progress'
 import WeightMedal from '../components/WeightMedal'
 import './dashboard.css'
@@ -67,7 +67,7 @@ export default function Dashboard() {
   const pesoSub = cur == null ? 'Registrar' : dayjs(data.current[C.weightDate]).format('DD/MM')
   const objSub = goal == null ? 'Definir'
     : diff == null ? 'Cambiar'
-    : Math.abs(diff) < 0.05 ? '¡Logrado! 🏅' : `Faltan ${Math.abs(diff).toFixed(1)} kg`
+    : Math.abs(diff) < 0.05 ? '¡Logrado!' : `Faltan ${Math.abs(diff).toFixed(1)} kg`
 
   return (
     <>
@@ -131,11 +131,18 @@ export default function Dashboard() {
                     <span className="text-muted small">{dayjs(data.lastWorkout.workout_date).format('ddd DD/MM')}</span></>
                 ) : <div className="text-muted small">Todavía no registraste ninguno</div>}
               </div>
-              <Link to="/workouts/new" className="btn btn-primary text-nowrap d-inline-flex align-items-center gap-1">
-                <Plus size={18} aria-hidden="true" />
-                <span className="d-none d-sm-inline">Nuevo entrenamiento</span>
-                <span className="d-sm-none">Nuevo</span>
-              </Link>
+              <div className="d-flex align-items-center gap-2 flex-none">
+                {data.lastWorkout && (
+                  <Link to={`/workouts/new?repeat=${data.lastWorkout.id}`} className="btn btn-outline-secondary" aria-label="Repetir último entrenamiento" title="Repetir último entrenamiento">
+                    <RotateCcw size={18} aria-hidden="true" />
+                  </Link>
+                )}
+                <Link to="/workouts/new" className="btn btn-primary text-nowrap d-inline-flex align-items-center gap-1">
+                  <Plus size={18} aria-hidden="true" />
+                  <span className="d-none d-sm-inline">Nuevo entrenamiento</span>
+                  <span className="d-sm-none">Nuevo</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

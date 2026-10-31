@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
+import { RotateCcw } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ConfirmButton from '../components/ConfirmButton'
 import TrainingTabs from '../components/TrainingTabs'
@@ -41,6 +42,9 @@ export default function Workouts() {
                 <small className="text-muted">{dayjs(w.workout_date).format('ddd DD/MM/YYYY')}</small>
               </span>
               <span className="d-flex gap-2 flex-none">
+                <Link className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" to={`/workouts/new?repeat=${w.id}`} aria-label={`Repetir ${w.name}`} title="Repetir entrenamiento">
+                  <RotateCcw size={16} aria-hidden="true" /><span className="d-none d-lg-inline">Repetir</span>
+                </Link>
                 <Link className="btn btn-sm btn-outline-primary" to={`/workouts/${w.id}`} aria-label={`Editar ${w.name}`}>Editar</Link>
                 <ConfirmButton what={w.name} onConfirm={() => del(w.id)} />
               </span>

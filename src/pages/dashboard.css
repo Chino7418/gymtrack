@@ -57,8 +57,8 @@ button.stat { font: inherit; text-align: left; width: 100%; }
 .medal-disc { fill: var(--accent-fill); }
 .medal-ring { fill: none; stroke: var(--on-accent); stroke-width: 1.4; opacity: 0.55; }
 .medal-star { fill: var(--on-accent); }
-.medal-gold .medal-disc { fill: #e8b931; }
-.medal-gold .medal-ring, .medal-gold .medal-star { stroke: #3a2a00; fill: #3a2a00; }
+.medal-gold .medal-disc { fill: var(--gold); }
+.medal-gold .medal-ring, .medal-gold .medal-star { stroke: var(--on-gold); fill: var(--on-gold); }
 .medal-gold .medal-ring { fill: none; }
 .wm-text { display: grid; line-height: 1.1; min-width: 0; }
 .wm-text b { font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }

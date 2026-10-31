@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Archive, ArchiveRestore } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
 import { uploadExerciseImage, removeExerciseImage, insertExercise } from '../lib/images'
@@ -12,6 +13,31 @@ import TrainingTabs from '../components/TrainingTabs'
 
 const VACIO = { id: null, name: '', muscle_group: '', description: '', image_url: null }
 
+function ExerciseList({ items, archived = false, onEdit, onDelete, onToggleArchive }) {
+  return (
+    <ul className="list-group">
+      {items.map((x) => (
+        <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
+          <span className="d-flex align-items-center gap-2 min-w-0">
+            {x.image_url
+              ? <img src={x.image_url} alt="" className="ex-thumb" loading="lazy" />
+              : <span className="ex-thumb ex-thumb-empty" aria-hidden="true">{x.name[0]}</span>}
+            <span className="min-w-0"><span className="d-block line-2">{x.name}</span><small className="text-muted">{grupoLabel(x.muscle_group)}</small></span>
+          </span>
+          <span className="d-flex gap-2 flex-none">
+            <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => onEdit(x)} aria-label={`Editar ${x.name}`}>Editar</button>
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onToggleArchive(x)}
+              aria-label={archived ? `Reactivar ${x.name}` : `Archivar ${x.name}`} title={archived ? 'Reactivar' : 'Archivar'}>
+              {archived ? <ArchiveRestore size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
+            </button>
+            <ConfirmButton what={x.name} onConfirm={() => onDelete(x.id)} />
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function Exercises() {
   const { user } = useAuth()
   const [list, setList] = useState([])
@@ -23,6 +49,7 @@ export default function Exercises() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
   useEffect(() => () => { if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview) }, [preview])
   const pickFile = (f) => { setFile(f); setPreview(URL.createObjectURL(f)) }
   const clearPhoto = () => { setFile(null); setPreview(null); setForm({ ...form, image_url: null }) }
@@ -68,13 +95,25 @@ export default function Exercises() {
   const del = async (id) => {
     const img = list.find((x) => x.id === id)?.image_url
     const { error } = await supabase.from(T.exercises).delete().eq('id', id)
-    if (error) setError(error.code === '23503' ? 'No se puede borrar: el ejercicio se usa en algún entrenamiento' : error.message)
+    if (error) setError(error.code === '23503' ? 'No se puede borrar: el ejercicio se usa en algún entrenamiento. Archivalo para ocultarlo del buscador.' : error.message)
     else { if (img) removeExerciseImage(img); load() }
+  }
+  const toggleArchive = async (x) => {
+    setError('')
+    const { error } = await supabase.from(T.exercises)
+      .update({ is_active: x.is_active === false, updated_at: new Date().toISOString() })
+      .eq('id', x.id)
+    if (error) setError(error.message)
+    else {
+      if (form.id === x.id) { setForm(VACIO); setFile(null); setPreview(null); setMode(null) }
+      load()
+    }
   }
   const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '', image_url: x.image_url ?? null }); setFile(null); setPreview(null); setMode('manual') }
   const toggle = (m) => { setForm(VACIO); setFile(null); setPreview(null); setMode(mode === m ? null : m) }
   const shown = preview ?? form.image_url
-
+  const active = list.filter((x) => x.is_active !== false)
+  const archived = list.filter((x) => x.is_active === false)
 
   return (
     <>
@@ -112,24 +151,22 @@ export default function Exercises() {
         </form>
       )}
 
-      <h2 className="h6 stat-label mb-2">Mis ejercicios ({list.length})</h2>
-      {loading ? <p role="status">Cargando…</p> : list.length === 0 ? <p className="text-muted">Todavía no cargaste ejercicios.</p> : (
-        <ul className="list-group">
-          {list.map((x) => (
-            <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
-              <span className="d-flex align-items-center gap-2 min-w-0">
-                {x.image_url
-                  ? <img src={x.image_url} alt="" className="ex-thumb" loading="lazy" />
-                  : <span className="ex-thumb ex-thumb-empty" aria-hidden="true">{x.name[0]}</span>}
-                <span className="min-w-0"><span className="d-block line-2">{x.name}</span><small className="text-muted">{grupoLabel(x.muscle_group)}</small></span>
-              </span>
-              <span className="d-flex gap-2 flex-none">
-                <button className="btn btn-sm btn-outline-primary" onClick={() => edit(x)} aria-label={`Editar ${x.name}`}>Editar</button>
-                <ConfirmButton what={x.name} onConfirm={() => del(x.id)} />
-              </span>
-            </li>
-          ))}
-        </ul>
+      <h2 className="h6 stat-label mb-2">Mis ejercicios ({active.length})</h2>
+      {loading ? <p role="status">Cargando…</p> : active.length === 0 ? <p className="text-muted">Todavía no cargaste ejercicios.</p> : (
+        <ExerciseList items={active} onEdit={edit} onDelete={del} onToggleArchive={toggleArchive} />
+      )}
+      {archived.length > 0 && (
+        <div className="mt-3">
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setShowArchived(!showArchived)} aria-expanded={showArchived} aria-controls="archived-exercises">
+            {showArchived ? 'Ocultar archivados' : `Ver archivados (${archived.length})`}
+          </button>
+          {showArchived && (
+            <div id="archived-exercises" className="mt-3">
+              <h2 className="h6 stat-label mb-2">Archivados</h2>
+              <ExerciseList items={archived} archived onEdit={edit} onDelete={del} onToggleArchive={toggleArchive} />
+            </div>
+          )}
+        </div>
       )}
     </>
   )

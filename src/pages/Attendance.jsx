@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
@@ -55,7 +56,7 @@ export default function Attendance() {
             aria-pressed={attended.has(d)} aria-label={dayjs(d).format('dddd D [de] MMMM')}
             className={`btn att-day ${attended.has(d) ? 'att-on' : ''} ${d === dayjs().format('YYYY-MM-DD') ? 'att-today' : ''}`}>
             {dayjs(d).date()}
-            {attended.has(d) && <span className="att-check" aria-hidden="true">✓</span>}
+            {attended.has(d) && <span className="att-check" aria-hidden="true"><Check size={12} /></span>}
           </button>
         ) : <div key={`e${i}`} />)}
       </div>

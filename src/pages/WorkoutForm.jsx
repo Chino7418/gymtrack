@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { supabase } from '../lib/supabaseClient'
 import { T, C } from '../lib/schema'
 import { buildSets, quickError, quickIssue, summarize, describe, itemSummary } from '../lib/sets'
 import useMediaQuery from '../lib/useMediaQuery'
-import { ChevronDown, ChevronUp, X, Plus } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Plus, Check, Pencil } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
+import RestTimerBar from '../components/RestTimerBar'
 import { useAuth } from '../context/AuthContext'
 import { insertExercise, uploadExerciseImage } from '../lib/images'
+import { readWorkoutDraft, writeWorkoutDraft, clearWorkoutDraft } from '../lib/workoutDraft'
 
-const emptySet = () => ({ weight_kg: '', reps: '', notes: '' })
+const emptySet = () => ({ weight_kg: '', reps: '', notes: '', done: false })
 const emptyQuick = () => ({ series: '', reps: '', min: '', max: '' })
 
 // Un ejercicio se carga en modo rápido (series × reps · peso mín–máx) si sus series lo permiten;
@@ -26,6 +28,8 @@ const toItem = (exercise_id, sets, extra = {}) => {
 
 export default function WorkoutForm() {
   const { id } = useParams()
+  const [params] = useSearchParams()
+  const repeatId = params.get('repeat')
   const nav = useNavigate()
   const { user } = useAuth()
   const [catalog, setCatalog] = useState([])
@@ -38,6 +42,8 @@ export default function WorkoutForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notFound, setNotFound] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
+  const timerRef = useRef(null)
   // Celular: acordeón. Solo una sección abierta ('info' = datos del entrenamiento, o el índice del ejercicio)
   const mobile = useMediaQuery('(max-width: 767.98px)')
   const [picking, setPicking] = useState(!id && !mobile)
@@ -49,42 +55,88 @@ export default function WorkoutForm() {
   count.current = items.length
 
   useEffect(() => {
-    (async () => {
+    setDraftRestored(false)
+    ;(async () => {
       const ex = await supabase.from(T.exercises).select('*').order(C.exerciseName)
       if (ex.error) setError(ex.error.message); else setCatalog(ex.data)
-      if (id) {
+      const sourceId = id ?? repeatId
+      if (sourceId) {
         const { data, error } = await supabase.from(T.workouts)
-          .select(`*, ${T.workoutExercises}(*, ${T.workoutSets}(*))`).eq('id', id).maybeSingle()
+          .select(`*, ${T.workoutExercises}(*, ${T.workoutSets}(*))`).eq('id', sourceId).maybeSingle()
         // Un id con formato inválido devuelve 22P02: también es "no encontrado"
         if (error && error.code !== '22P02') setError(error.message)
-        else if (!data) setNotFound(true)
-        else {
-          setName(data.name); setDate(data.workout_date); setNotes(data.notes ?? '')
-          setItems([...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => {
+        else if (!data) {
+          if (id) setNotFound(true)
+          else setError('No se pudo cargar el entrenamiento a repetir. Podés empezar uno nuevo.')
+        } else {
+          const repeat = !id
+          const workoutItems = [...data[T.workoutExercises]].sort((a, b) => a.position - b.position).map((we) => {
             const sets = [...we[T.workoutSets]].sort((a, b) => a.set_number - b.set_number)
-              .map((s) => ({ weight_kg: s.weight_kg ?? '', reps: s.reps ?? '', notes: s.notes ?? '' }))
-            return toItem(we.exercise_id, sets, { notes: we.notes ?? '', showExNote: !!we.notes })
-          }))
+              .map((s) => ({ weight_kg: s.weight_kg ?? '', reps: s.reps ?? '', notes: s.notes ?? '', done: false }))
+            return toItem(we.exercise_id, sets, {
+              notes: we.notes ?? '', showExNote: !!we.notes,
+              ...(repeat ? { prev: { date: data.workout_date, sets } } : {}),
+            })
+          })
+          setName(data.name ?? '')
+          setDate(repeat ? dayjs().format('YYYY-MM-DD') : data.workout_date)
+          setNotes(repeat ? '' : data.notes ?? '')
+          setItems(workoutItems)
+          if (repeat) setAttend(true)
+        }
+      } else {
+        const draft = readWorkoutDraft(user.id)
+        if (draft) {
+          setName(draft.name ?? '')
+          setDate(draft.date ?? dayjs().format('YYYY-MM-DD'))
+          setNotes(draft.notes ?? '')
+          setAttend(draft.attend !== false)
+          setItems(draft.items.map((it) => ({
+            ...it,
+            quick: it.quick ?? emptyQuick(),
+            sets: (it.sets ?? []).map((s) => ({ ...s, done: !!s.done })),
+          })))
+          setDraftRestored(true)
         }
       }
       setLoading(false)
     })()
-  }, [id])
+  }, [id, repeatId, user.id])
+
+  // Borrador local: se guarda solo para entrenamientos nuevos o repetidos.
+  useEffect(() => {
+    if (loading || notFound || id) return
+    const empty = !name.trim() && !notes.trim() && items.length === 0
+    if (empty) clearWorkoutDraft(user.id)
+    else writeWorkoutDraft(user.id, { name, date, notes, attend, items })
+  }, [loading, notFound, id, name, date, notes, attend, items, user.id])
+
+  const discardDraft = () => {
+    clearWorkoutDraft(user.id)
+    setName(''); setDate(dayjs().format('YYYY-MM-DD')); setNotes(''); setAttend(true)
+    setItems([]); setDraftRestored(false); setOpen('info')
+  }
+  const cancel = () => { if (!id) clearWorkoutDraft(user.id); nav('/workouts') }
 
   const upd = (i, patch) => setItems(items.map((x, k) => (k === i ? { ...x, ...patch } : x)))
   const updQuick = (i, patch) => upd(i, { quick: { ...items[i].quick, ...patch } })
   const updSet = (i, j, patch) => upd(i, { sets: items[i].sets.map((s, k) => (k === j ? { ...s, ...patch } : s)) })
+  const toggleSetDone = (i, j) => {
+    const next = !items[i].sets[j].done
+    updSet(i, j, { done: next })
+    if (next) timerRef.current?.restart()
+  }
   // Nueva serie = copia de la anterior (peso y reps), para cargar más rápido
   const addSet = (i) => {
     const last = items[i].sets.at(-1)
-    upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '', showNote: false } : emptySet()] })
+    upd(i, { sets: [...items[i].sets, last ? { ...last, notes: '', showNote: false, done: false } : emptySet()] })
   }
   // Rápido → detallado: genera las series para poder corregir una por una
   const toDetail = (i) => {
     const { quick: q } = items[i]
     // Si la carga rápida está incompleta, se precarga lo que haya (peso mínimo y reps en cada serie)
     const n = Math.min(Math.max(parseInt(q.series, 10) || 1, 1), 20)
-    const sets = quickError(q) ? Array.from({ length: n }, () => ({ weight_kg: q.min, reps: q.reps, notes: '' })) : buildSets(q)
+    const sets = quickError(q) ? Array.from({ length: n }, () => ({ weight_kg: q.min, reps: q.reps, notes: '', done: false })) : buildSets(q).map((s) => ({ ...s, done: false }))
     upd(i, { mode: 'detail', sets })
   }
   const toQuick = (i) => upd(i, { mode: 'quick', quick: summarize(items[i].sets) })
@@ -206,6 +258,7 @@ export default function WorkoutForm() {
     })
     setSaving(false)
     if (error) return setError(error.message)
+    if (!id) clearWorkoutDraft(user.id)
     nav('/workouts')
   }
 
@@ -221,7 +274,14 @@ export default function WorkoutForm() {
   return (
     <form onSubmit={save} noValidate>
       <h1 className="h4 mb-3">{id ? 'Editar entrenamiento' : 'Nuevo entrenamiento'}</h1>
+      {draftRestored && (
+        <div className="alert alert-secondary py-2 d-flex flex-wrap align-items-center justify-content-between gap-2" role="status">
+          <span>Recuperamos un borrador sin guardar.</span>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={discardDraft}>Descartar</button>
+        </div>
+      )}
       <ErrorMsg error={error} />
+      <RestTimerBar ref={timerRef} />
       <section className="card mb-3" aria-labelledby="wf-info">
         <h2 className="acc-h m-0">
           <button type="button" id="wf-info" className="acc-head" onClick={() => toggle('info')} aria-expanded={isOpen('info')} aria-controls="wf-info-body" disabled={!mobile}>
@@ -309,11 +369,16 @@ export default function WorkoutForm() {
                   {it.sets.map((s, j) => (
                     <div key={j} className="mb-2">
                       <div className="set-row">
-                        <span className="set-num">{j + 1}</span>
+                        <button type="button" className={`set-done ${s.done ? 'is-done' : ''}`} aria-pressed={!!s.done}
+                          aria-label={`Serie ${j + 1}: ${s.done ? 'hecha' : 'marcar como hecha'}`}
+                          title={s.done ? 'Serie hecha' : 'Marcar serie como hecha y arrancar el descanso'}
+                          onClick={() => toggleSetDone(i, j)}>
+                          {s.done ? <Check size={14} aria-hidden="true" /> : j + 1}
+                        </button>
                         <input type="number" inputMode="decimal" min="0" step="any" className="form-control" aria-label={`Peso serie ${j + 1} (kg)`} value={s.weight_kg} onChange={(e) => updSet(i, j, { weight_kg: e.target.value })} />
                         <input type="number" inputMode="numeric" pattern="[0-9]*" min="1" className="form-control" aria-label={`Repeticiones serie ${j + 1}`} value={s.reps} onChange={(e) => updSet(i, j, { reps: e.target.value })} />
-                        <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}>✎</button>
-                        <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}>×</button>
+                        <button type="button" className={`btn btn-outline-secondary ${s.notes || s.showNote ? 'active' : ''}`} aria-pressed={!!(s.notes || s.showNote)} aria-label={`Nota serie ${j + 1}`} onClick={() => updSet(i, j, { showNote: !s.showNote })}><Pencil size={16} aria-hidden="true" /></button>
+                        <button type="button" className="btn btn-outline-secondary" aria-label={`Quitar serie ${j + 1}`} onClick={() => upd(i, { sets: it.sets.filter((_, k) => k !== j) })}><X size={16} aria-hidden="true" /></button>
                       </div>
                     </div>
                   ))}
@@ -365,7 +430,7 @@ export default function WorkoutForm() {
       <div className="form-actions">
         <button className="btn btn-primary fa-save" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>
         <button type="button" className={`btn ${picking ? 'btn-outline-secondary' : 'btn-outline-primary'}`} aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking && !mobile ? 'Cerrar buscador' : <><Plus size={18} aria-hidden="true" />Agregar ejercicio</>}</button>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => nav('/workouts')}>Cancelar</button>
+        <button type="button" className="btn btn-outline-secondary" onClick={cancel}>Cancelar</button>
       </div>
     </form>
   )

@@ -55,6 +55,9 @@
   --warning-rgb: 255, 159, 28;
   --on-warning: #1a0e02;
 
+  --gold: #e8b931;
+  --on-gold: #3a2a00;
+
   --focus: #ff6b6b;
   --track: #27272a;
 
@@ -120,6 +123,9 @@
   --warning: #c2410c;
   --warning-rgb: 194, 65, 12;
   --on-warning: #ffffff;
+
+  --gold: #d4a017;
+  --on-gold: #3a2a00;
 
   --focus: #18181b;
   --track: #e7e5e4;

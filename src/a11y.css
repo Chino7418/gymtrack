@@ -22,10 +22,14 @@
 .chip.active { --bs-btn-bg: var(--fg); --bs-btn-color: var(--on-fg); --bs-btn-border-color: var(--fg); --bs-btn-hover-bg: var(--fg); --bs-btn-hover-color: var(--on-fg); --bs-btn-active-bg: var(--fg); --bs-btn-active-color: var(--on-fg); font-weight: 600; }
 
 /* Series del entrenamiento: una sola línea a 360px */
-.set-row { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) minmax(0, 1fr) 44px 44px; gap: 0.5rem; align-items: center; }
+.set-row { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr) minmax(0, 1fr) 44px 44px; gap: 0.5rem; align-items: center; }
 .set-head { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--bs-secondary-color); margin-bottom: 0.25rem; }
 .set-num { text-align: center; font-weight: 700; color: var(--bs-secondary-color); font-variant-numeric: tabular-nums; }
 .set-row .btn { padding: 0; min-width: 0; height: 100%; min-height: 38px; }
+/* El número de la serie también la marca como hecha y arranca el descanso */
+.set-done { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border: 1px solid transparent; border-radius: 999px; background: none; color: var(--bs-secondary-color); font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.set-done:hover { border-color: var(--line-strong); color: var(--fg); }
+.set-done.is-done { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
 
 /* Temporizador: en pantallas angostas los controles van debajo del anillo */
 .timer-body { display: flex; align-items: center; gap: 1rem; }
@@ -41,11 +45,27 @@
   .timer-preset { padding-inline: 0.55rem !important; }
 }
 
+/* Temporizador compacto dentro del formulario de entrenamiento */
+.rest-bar { position: sticky; top: 0.5rem; z-index: 4; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.65rem; background: var(--surface); border: 1px solid var(--line); border-radius: 0.8rem; box-shadow: var(--shadow-sm); }
+.rest-bar > svg { flex: none; color: var(--accent-text); }
+.rest-bar-time { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3.1rem; }
+.rest-bar-caption { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.rest-bar-actions { display: flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+.rest-bar-actions .btn { padding-inline: 0.55rem; }
+.rest-bar-preset { width: auto; min-width: 4.5rem; }
+.rest-done .rest-bar-time { color: var(--success); }
+@media (max-width: 767.98px) {
+  .rest-bar { top: 0; }
+  .rest-bar-caption { display: none; }
+  .rest-bar-time { min-width: 2.9rem; }
+}
+
 /* Asistencia: calendario con días de 44px y marca que no depende del color */
 .att-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; max-width: 480px; }
 .att-day { position: relative; padding: 0; font-variant-numeric: tabular-nums; }
 .att-day.att-today { outline: 2px dashed var(--bs-secondary-color); outline-offset: -4px; }
 .att-check { position: absolute; top: 2px; right: 5px; font-size: 0.7rem; line-height: 1; }
+.att-check svg { display: block; }
 
 /* overscroll-behavior va solo donde la lista scrollea (styles.css, desde tablet): en celular
    la lista tiene overflow hidden y "contain" bloqueaba el scroll de la página con el dedo encima */
