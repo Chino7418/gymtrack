@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
+import { uploadExerciseImage, removeExerciseImage, insertExercise } from '../lib/images'
+import { Camera, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
@@ -8,7 +10,7 @@ import ConfirmButton from '../components/ConfirmButton'
 import { GRUPOS, grupoLabel } from '../lib/muscles'
 import TrainingTabs from '../components/TrainingTabs'
 
-const VACIO = { id: null, name: '', muscle_group: '', description: '' }
+const VACIO = { id: null, name: '', muscle_group: '', description: '', image_url: null }
 
 export default function Exercises() {
   const { user } = useAuth()
@@ -17,6 +19,17 @@ export default function Exercises() {
   const [mode, setMode] = useState(null) // null | 'catalog' | 'manual'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  // Foto elegida (todavía sin subir) y su vista previa
+  const [file, setFile] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => () => { if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview) }, [preview])
+  const pickFile = (f) => {
+    if (!f) return
+    if (!f.type.startsWith('image/')) return setError('El archivo tiene que ser una imagen')
+    setFile(f); setPreview(URL.createObjectURL(f))
+  }
+  const clearPhoto = () => { setFile(null); setPreview(null); setForm({ ...form, image_url: null }) }
 
   const load = async () => {
     const { data, error } = await supabase.from(T.exercises).select('*').order('name')
@@ -31,27 +44,40 @@ export default function Exercises() {
     if (!form.muscle_group) return setError('Elegí un grupo muscular')
     if (list.some((x) => x.id !== form.id && norm(x.name) === norm(form.name)))
       return setError('Ya tenés un ejercicio con ese nombre')
-    const row = { name: form.name.trim(), muscle_group: form.muscle_group, description: form.description.trim() || null }
-    const { error } = form.id
-      ? await supabase.from(T.exercises).update({ ...row, updated_at: new Date().toISOString() }).eq('id', form.id)
-      : await supabase.from(T.exercises).insert({ ...row, user_id: user.id })
-    if (error) return setError(error.message)
-    setForm(VACIO); setMode(null); load()
+    setSaving(true)
+    try {
+      const before = list.find((x) => x.id === form.id)?.image_url ?? null
+      const image_url = file ? await uploadExerciseImage(file, user.id) : form.image_url
+      const row = { name: form.name.trim(), muscle_group: form.muscle_group, description: form.description.trim() || null }
+      if (file || image_url !== before) row.image_url = image_url
+      const { error } = form.id
+        ? await supabase.from(T.exercises).update({ ...row, updated_at: new Date().toISOString() }).eq('id', form.id)
+        : await insertExercise({ ...row, user_id: user.id })
+      if (error) throw new Error(/image_url/.test(error.message) ? 'Falta aplicar la migración de imágenes en Supabase' : error.message)
+      // La foto anterior propia se borra del almacenamiento si se reemplazó o se quitó
+      if (before && before !== image_url) removeExerciseImage(before)
+      setForm(VACIO); setFile(null); setPreview(null); setMode(null); load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
   }
   const importar = async (x) => {
     setError('')
-    const { error } = await supabase.from(T.exercises)
-      .insert({ name: x.name, muscle_group: x.muscle_group, description: x.description, user_id: user.id })
+    const { error } = await insertExercise({ name: x.name, muscle_group: x.muscle_group, description: x.description, image_url: x.image ?? null, user_id: user.id })
     if (error) { setError(error.message); return false }
     load()
   }
   const del = async (id) => {
+    const img = list.find((x) => x.id === id)?.image_url
     const { error } = await supabase.from(T.exercises).delete().eq('id', id)
     if (error) setError(error.code === '23503' ? 'No se puede borrar: el ejercicio se usa en algún entrenamiento' : error.message)
-    else load()
+    else { if (img) removeExerciseImage(img); load() }
   }
-  const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '' }); setMode('manual') }
-  const toggle = (m) => { setForm(VACIO); setMode(mode === m ? null : m) }
+  const edit = (x) => { setForm({ id: x.id, name: x.name, muscle_group: x.muscle_group, description: x.description ?? '', image_url: x.image_url ?? null }); setFile(null); setPreview(null); setMode('manual') }
+  const toggle = (m) => { setForm(VACIO); setFile(null); setPreview(null); setMode(mode === m ? null : m) }
+  const shown = preview ?? form.image_url
 
 
   return (
@@ -78,8 +104,23 @@ export default function Exercises() {
               </select>
             </div>
             <div className="col-12 col-md-5"><label className="form-label" htmlFor="ex-desc">Descripción <span className="text-muted small">(opcional)</span></label><input id="ex-desc" className="form-control" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="col-12">
+              <span className="form-label d-block">Foto <span className="text-muted small">(opcional)</span></span>
+              <div className="photo-field">
+                {shown
+                  ? <img src={shown} alt="Vista previa de la foto del ejercicio" className="photo-preview" />
+                  : <span className="photo-preview photo-empty" aria-hidden="true"><Camera size={28} /></span>}
+                <div className="d-flex flex-wrap gap-2">
+                  <label className="btn btn-outline-secondary mb-0" htmlFor="ex-photo">
+                    <Camera size={18} aria-hidden="true" className="me-1" />{shown ? 'Cambiar foto' : 'Agregar foto'}
+                  </label>
+                  <input id="ex-photo" type="file" accept="image/*" className="visually-hidden" onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = '' }} />
+                  {shown && <button type="button" className="btn btn-outline-secondary" onClick={clearPhoto}><X size={18} aria-hidden="true" className="me-1" />Quitar</button>}
+                </div>
+              </div>
+            </div>
             <div className="col-12 d-flex gap-2">
-              <button className="btn btn-primary">{form.id ? 'Guardar cambios' : 'Agregar ejercicio'}</button>
+              <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Agregar ejercicio'}</button>
               <button type="button" className="btn btn-outline-secondary" onClick={() => toggle('manual')}>Cancelar</button>
             </div>
           </div>
@@ -91,7 +132,12 @@ export default function Exercises() {
         <ul className="list-group">
           {list.map((x) => (
             <li key={x.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
-              <span className="min-w-0 text-truncate">{x.name} <small className="text-muted ms-2">{grupoLabel(x.muscle_group)}</small></span>
+              <span className="d-flex align-items-center gap-2 min-w-0">
+                {x.image_url
+                  ? <img src={x.image_url} alt="" className="ex-thumb" loading="lazy" />
+                  : <span className="ex-thumb ex-thumb-empty" aria-hidden="true">{x.name[0]}</span>}
+                <span className="min-w-0"><span className="d-block line-2">{x.name}</span><small className="text-muted">{grupoLabel(x.muscle_group)}</small></span>
+              </span>
               <span className="d-flex gap-2 flex-none">
                 <button className="btn btn-sm btn-outline-primary" onClick={() => edit(x)} aria-label={`Editar ${x.name}`}>Editar</button>
                 <ConfirmButton what={x.name} onConfirm={() => del(x.id)} />

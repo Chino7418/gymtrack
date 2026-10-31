@@ -14,6 +14,7 @@ export const C = {
   profileName: 'full_name',
   exerciseName: 'name',
   exerciseGroup: 'muscle_group',
+  exerciseImage: 'image_url',
   weightValue: 'weight_kg',
   weightDate: 'recorded_date',
   attendanceDate: 'attendance_date',

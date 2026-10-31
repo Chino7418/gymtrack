@@ -139,3 +139,8 @@ button.settings-row.text-danger-emphasis { color: var(--danger-text) !important;
 body.sheet-open { overflow: hidden; }
 @keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .form-actions .btn { gap: 0.35rem; }
+
+/* Foto del ejercicio en el formulario manual */
+.photo-field { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.photo-preview { width: 88px; height: 88px; border-radius: 0.8rem; object-fit: cover; flex: none; border: 1px solid var(--line); }
+.photo-empty { display: grid; place-items: center; color: var(--muted); background: var(--surface-strong); }

@@ -27,6 +27,7 @@ Ejecutá las migraciones SQL en Supabase SQL Editor (o CLI):
 - `supabase/migrations/20261013185000_rpc_save_workout.sql`
 - `supabase/migrations/20261020000000_goal_weight.sql`
 - `supabase/migrations/20261024000000_attendance_unique.sql`
+- `supabase/migrations/20261031000000_exercise_images.sql` (crea también el bucket `exercise-images` de Storage)
 
 Aplicalas en ese orden.
 

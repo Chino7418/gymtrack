@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp, X, Plus } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
+import { insertExercise } from '../lib/images'
 
 const emptySet = () => ({ weight_kg: '', reps: '', notes: '' })
 const emptyQuick = () => ({ series: '', reps: '', min: '', max: '' })
@@ -93,9 +94,7 @@ export default function WorkoutForm() {
     if (catalog.some((c) => c.id === x.id)) return x
     const found = catalog.find((c) => norm(c.name) === norm(x.name))
     if (found) return found
-    const { data, error } = await supabase.from(T.exercises)
-      .insert({ name: x.name, muscle_group: x.muscle_group, description: x.description, user_id: user.id })
-      .select().single()
+    const { data, error } = await insertExercise({ name: x.name, muscle_group: x.muscle_group, description: x.description, image_url: x.image ?? null, user_id: user.id })
     if (error) { setError(error.message); return null }
     setCatalog((c) => [...c, data])
     return data

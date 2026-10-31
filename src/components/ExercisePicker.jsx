@@ -37,7 +37,7 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
   const [lastAdded, setLastAdded] = useState('')
   const pick = async (x) => { setPicking(x.id); const ok = await onPick(x); setPicking(null); if (ok !== false) setLastAdded(x.name) }
   const added = new Set(mine.map((x) => norm(x.name)))
-  const source = cat === MIOS ? mine.filter((x) => x.is_active !== false) : items
+  const source = cat === MIOS ? mine.filter((x) => x.is_active !== false).map((x) => ({ ...x, thumb: x.image_url, image: x.image_url })) : items
   const shown = source.filter((x) => norm(x.name).includes(norm(q)) && (!onlyImg || x.thumb))
   const chip = (id, label) => (
     <button key={id} type="button" className={`btn btn-sm chip ${cat === id ? 'active' : ''}`} aria-pressed={cat === id} onClick={() => setCat(id)}>{label}</button>
