@@ -36,7 +36,7 @@ npm run build     # salida en dist/
 - `src/lib/schema.js` centraliza las tablas (`T`) y la mayoría de columnas (`C`), pero no es completo: los campos de perfil se usan literales (`first_name`, `last_name`, `username`, `birth_date`, `height_cm`, `goal_weight_kg`). `C.profileName` está obsoleto: `full_name` no existe en la base.
 - `muscle_group` tiene un CHECK sin tildes: `Pecho`, `Espalda`, `Hombros`, `Biceps`, `Triceps`, `Piernas`, `Gluteos`, `Abdomen`, `Otro`. Para mostrar, usá `grupoLabel` de `src/lib/muscles.js`.
 - Catálogo de ejercicios: API pública de wger.de, sin key, con caché en memoria por categoría. Los tests reimportan el módulo para aislar ese caché.
-- Fotos: se achican en el browser y se suben al bucket público `exercise-images/<user_id>/`; la URL queda en `exercises.image_url`. `insertExercise` reintenta sin `image_url` si la migración no está aplicada.
+- Fotos: se achican en el browser y se suben a Cloudinary (`unamas/<user_id>/`) si están `VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET`; si no, al bucket público `exercise-images/<user_id>/` de Supabase. La URL queda en `exercises.image_url`. `insertExercise` reintenta sin `image_url` si la migración no está aplicada.
 - `gym_attendances` necesita la unique `(user_id, attendance_date)` para que funcione el `ON CONFLICT DO NOTHING` de `save_workout`.
 
 ## UI y convenciones

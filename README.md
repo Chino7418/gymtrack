@@ -18,6 +18,17 @@ npm install
    - VITE_SUPABASE_URL
    - VITE_SUPABASE_PUBLISHABLE_KEY
 
+### Fotos en Cloudinary (opcional)
+
+Por defecto las fotos de ejercicios van al bucket `exercise-images` de Supabase Storage. Para usar Cloudinary:
+
+1. Crear una cuenta en [cloudinary.com](https://cloudinary.com) y copiar el **cloud name** del dashboard.
+2. En Settings > Upload > Upload presets, crear uno con **Signing mode: Unsigned** (opcional: limitar formatos `jpg,png,webp` y tamaño máximo; no fijes carpeta, la app manda `unamas/<user_id>`).
+3. Completar en `.env` (y en Vercel) `VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET`.
+4. Listo: las fotos nuevas se suben a `unamas/<user_id>/` y se sirven optimizadas (`f_auto,q_auto`). Las que ya estaban en Supabase siguen funcionando.
+
+El preset unsigned viaja en el frontend (es público por diseño). Cloudinary no permite borrar desde el navegador sin firma: las fotos reemplazadas o de ejercicios borrados quedan en la cuenta y se limpian desde el dashboard.
+
 ## 3. Migraciones
 
 Ejecutá las migraciones SQL en Supabase SQL Editor (o CLI):

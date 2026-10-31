@@ -1,5 +1,7 @@
-// Imágenes de ejercicios en Supabase Storage (bucket público "exercise-images", carpeta por usuario)
+// Imágenes de ejercicios: Cloudinary si está configurado; si no, Supabase Storage
+// (bucket público "exercise-images", carpeta por usuario)
 import { supabase } from './supabaseClient'
+import { cloudinaryEnabled, uploadToCloudinary } from './cloudinary'
 
 export const BUCKET = 'exercise-images'
 const MAX_SIDE = 800
@@ -20,13 +22,16 @@ export async function shrink(file, maxSide = MAX_SIDE) {
 export async function uploadExerciseImage(file, userId) {
   if (!file.type.startsWith('image/')) throw new Error('El archivo tiene que ser una imagen')
   const blob = await shrink(file)
+  if (cloudinaryEnabled) return uploadToCloudinary(blob, userId)
   const path = `${userId}/${crypto.randomUUID()}.jpg`
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false })
   if (error) throw new Error(error.message === 'Bucket not found' ? 'Falta configurar el almacenamiento de imágenes en Supabase' : error.message)
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
-// Borra una imagen propia a partir de su URL pública (las del catálogo de wger se ignoran)
+// Borra una imagen propia a partir de su URL pública (las del catálogo de wger se ignoran).
+// Cloudinary no permite borrar desde el navegador sin firma: esas fotos se limpian a mano
+// desde el dashboard de Cloudinary.
 export async function removeExerciseImage(url) {
   const marker = `/object/public/${BUCKET}/`
   const i = url?.indexOf(marker) ?? -1
