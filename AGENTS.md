@@ -9,14 +9,16 @@ App **"Una Más"** (repo `gymtrack`): registro de entrenamientos, ejercicios, as
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm test          # Vitest, una sola corrida
 npm run build     # salida en dist/
+npm run preview   # sirve dist/ en http://localhost:4173
+npm test          # Vitest, una sola corrida
 ```
 
 - Un archivo: `npx vitest run src/lib/sets.test.js`
 - Un test por nombre: `npx vitest run -t "pirámide"`
 - No hay lint, typecheck ni formatter. La verificación es `npm test` + `npm run build`.
 - Vite 8 exige Node `^20.19.0 || >=22.12.0`.
+- Deploy: push a `main` → deploy automático en Vercel (build `npm run build`, output `dist`; las funciones de `api/` se despliegan solas; `vercel.json` reescribe todo a `index.html` pero los assets de `public/` se sirven antes del rewrite).
 
 ## Setup y datos
 
@@ -48,6 +50,7 @@ npm run build     # salida en dist/
 - Tema: tokens CSS bajo `[data-bs-theme]` en `src/styles.css`. No uses colores literales en componentes ni `@media (prefers-color-scheme)` en CSS. `src/lib/theme.js` y el script inline de `index.html` setean el atributo; los gráficos escuchan el evento `themechange`.
 - Orden CSS: `styles.css` → `a11y.css` → `motion.css`; `dashboard.css` se importa desde `Dashboard.jsx` y carga después (por eso `a11y.css` usa `:root` para ganar especificidad).
 - Mobile: barra inferior `.tabbar` por debajo de `md`, menú superior desde `md`; objetivos táctiles de 44px con `pointer: coarse`.
+- Iconos: `lucide-react`, no emojis ni glifos de texto; la fuente es Chakra Petch (Google Fonts, en `index.html`).
 
 ## Tests
 
@@ -58,4 +61,6 @@ npm run build     # salida en dist/
 ## Referencias
 
 - `README.md`: instalación, migraciones, Auth y deploy.
+- `CLAUDE.md`: arquitectura y convenciones completas.
 - `.claude/agents/*` es un flujo de Claude Code; OpenCode no expone esos subagentes (solo `explore`/`general`). Hacé el equivalente a mano.
+- `.mcp.json` registra el servidor MCP `playwright` (`npx @playwright/mcp@latest`) para QA en el navegador.
