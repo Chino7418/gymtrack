@@ -144,3 +144,5 @@ body.sheet-open { overflow: hidden; }
 .photo-field { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .photo-preview { width: 88px; height: 88px; border-radius: 0.8rem; object-fit: cover; flex: none; border: 1px solid var(--line); }
 .photo-empty { display: grid; place-items: center; color: var(--muted); background: var(--surface-strong); }
+
+.new-ex .form-label { margin-bottom: 0.25rem; }

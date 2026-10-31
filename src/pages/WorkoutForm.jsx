@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, X, Plus } from 'lucide-react'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
 import { useAuth } from '../context/AuthContext'
-import { insertExercise } from '../lib/images'
+import { insertExercise, uploadExerciseImage } from '../lib/images'
 
 const emptySet = () => ({ weight_kg: '', reps: '', notes: '' })
 const emptyQuick = () => ({ series: '', reps: '', min: '', max: '' })
@@ -121,6 +121,23 @@ export default function WorkoutForm() {
     setError('')
     const ex = await ensureExercise(x)
     if (!ex) return false
+    await addItem(ex)
+  }
+  // Ejercicio propio creado desde el buscador: se guarda (con su foto) y se agrega al entrenamiento
+  const createExercise = async ({ name, muscle_group, file }) => {
+    const existing = catalog.find((c) => norm(c.name) === norm(name))
+    if (existing) { await addItem(existing); return }
+    try {
+      const image_url = file ? await uploadExerciseImage(file, user.id) : null
+      const { data, error } = await insertExercise({ name, muscle_group, image_url, user_id: user.id })
+      if (error) return error.message
+      setCatalog((c) => [...c, data])
+      await addItem(data)
+    } catch (err) {
+      return err.message
+    }
+  }
+  const addItem = async (ex) => {
     const prev = await lastSets(ex.id)
     // Se precarga lo de la última vez; si es la primera, carga rápida vacía
     // El ejercicio nuevo queda abierto y se pliega lo demás
@@ -341,9 +358,9 @@ export default function WorkoutForm() {
             <h2 id="picker-title" className="h5 m-0">Agregar ejercicio</h2>
             <button type="button" className="btn btn-outline-secondary" onClick={() => setPicking(false)} aria-label="Cerrar y volver al entrenamiento" autoFocus><X size={20} aria-hidden="true" /></button>
           </div>
-          <div className="picker-sheet-body"><ExercisePicker mine={catalog} onPick={addExercise} includeMine /></div>
+          <div className="picker-sheet-body"><ExercisePicker mine={catalog} onPick={addExercise} onCreate={createExercise} includeMine /></div>
         </div>, document.body
-      ) : <ExercisePicker mine={catalog} onPick={addExercise} includeMine />)}
+      ) : <ExercisePicker mine={catalog} onPick={addExercise} onCreate={createExercise} includeMine />)}
 
       <div className="form-actions">
         <button className="btn btn-primary fa-save" disabled={saving}>{saving ? 'Guardando…' : 'Guardar entrenamiento'}</button>

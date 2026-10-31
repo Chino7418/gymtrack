@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { CATEGORIAS, ejerciciosPorCategoria } from '../lib/wger'
 import { ErrorMsg } from './Layout'
 import { grupoLabel } from '../lib/muscles'
+import NewExerciseForm from './NewExerciseForm'
 
 export const norm = (s) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const MIOS = 'mine'
@@ -10,7 +11,9 @@ const PAGE = 30 // ejercicios por página: la lista fluye con la página en vez 
 
 // Buscador de ejercicios: "Mis ejercicios" (opcional) + categorías del catálogo wger.
 // onPick recibe el ejercicio propio o el item del catálogo (sin id de nuestra tabla).
-export default function ExercisePicker({ mine, onPick, includeMine = false, markAdded = false }) {
+// onCreate (opcional) habilita "Crear ejercicio nuevo" para lo que no está en el catálogo.
+export default function ExercisePicker({ mine, onPick, onCreate, includeMine = false, markAdded = false }) {
+  const [creating, setCreating] = useState(null) // null, o el nombre con el que arranca el formulario
   const [cat, setCat] = useState(includeMine ? MIOS : null)
   const [items, setItems] = useState([])
   const [q, setQ] = useState('')
@@ -43,8 +46,19 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
     <button key={id} type="button" className={`btn btn-sm chip ${cat === id ? 'active' : ''}`} aria-pressed={cat === id} onClick={() => setCat(id)}>{label}</button>
   )
 
+  if (creating !== null) return (
+    <div className="card card-body p-3 mb-3">
+      <NewExerciseForm initialName={creating} onCancel={() => setCreating(null)} onCreate={async (x) => { const msg = await onCreate(x); if (!msg) setCreating(null); return msg }} />
+    </div>
+  )
+
   return (
     <div className="card card-body p-3 mb-3">
+      {onCreate && (
+        <button type="button" className="btn btn-outline-primary w-100 mb-2 d-inline-flex align-items-center justify-content-center gap-1" onClick={() => setCreating(q)}>
+          <Plus size={18} aria-hidden="true" />Crear ejercicio nuevo
+        </button>
+      )}
       <div className="picker-chips mb-2" role="group" aria-label="Categorías">
         {includeMine && chip(MIOS, 'Mis ejercicios')}
         {CATEGORIAS.map((c) => chip(c.id, c.label))}
@@ -61,7 +75,13 @@ export default function ExercisePicker({ mine, onPick, includeMine = false, mark
             </div>
           )}
           {shown.length === 0 ? (
-            <p className="text-muted small mb-0">{cat === MIOS && !q ? 'Todavía no tenés ejercicios: elegí una categoría del catálogo.' : 'Sin resultados.'}</p>
+            <>
+              <p className="text-muted small mb-0">{cat === MIOS && !q ? 'Todavía no tenés ejercicios: elegí una categoría del catálogo o creá uno nuevo.' : 'Sin resultados.'}</p>
+              {/* Lo que no está en el catálogo se puede crear directamente */}
+              {onCreate && q.trim() && (
+                <button type="button" className="btn btn-primary w-100 mt-2" onClick={() => setCreating(q.trim())}>Crear «{q.trim()}»</button>
+              )}
+            </>
           ) : (
             <ul className="list-group catalog-list">
               {shown.slice(0, limit).map((x) => (
