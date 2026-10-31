@@ -35,12 +35,13 @@ npm test          # Vitest, una sola corrida
 - Temporizador: `src/lib/useRestTimer.js` comparte el estado entre el reloj de Inicio (`RestTimer.jsx`), la barra del formulario (`RestTimerBar.jsx`) y la barra global del `Layout.jsx`, con `localStorage` (`gymtrack.restTimer`). Marcar una serie como hecha arranca el descanso con `restart()`. La barra global aparece en todas las pantallas mientras el descanso corre o está en pausa, salvo en Inicio y el formulario, que ya lo muestran.
 - PWA: `public/manifest.webmanifest` + `public/sw.js` (shell precacheado, navegación red-primero y assets stale-while-revalidate, solo mismo origen). El SW se registra en `src/main.jsx` solo en producción; si cambiás la estrategia, subí `CACHE` en `sw.js`.
 - Archivar ejercicios usa `exercises.is_active = false` (columna existente). El buscador oculta los archivados (`is_active !== false`), pero el formulario resuelve igual el nombre de los que ya están cargados.
-- `src/lib/schema.js` centraliza las tablas (`T`) y la mayoría de columnas (`C`), pero no es completo: los campos de perfil se usan literales (`first_name`, `last_name`, `username`, `birth_date`, `height_cm`, `goal_weight_kg`). `C.profileName` está obsoleto: `full_name` no existe en la base.
+- `src/lib/schema.js` centraliza las tablas (`T`) y la mayoría de columnas (`C`), pero no es completo: los campos de perfil se usan literales (`first_name`, `last_name`, `username`, `birth_date`, `goal_weight_kg`); la altura se maneja desde la pantalla de Peso. `C.profileName` está obsoleto: `full_name` no existe en la base. También define `T.bodyMeasurements` (`body_measurements`) y las columnas `measurement`, `value_cm` y `measured_date`.
 - `muscle_group` tiene un CHECK sin tildes: `Pecho`, `Espalda`, `Hombros`, `Biceps`, `Triceps`, `Piernas`, `Gluteos`, `Abdomen`, `Otro`. Para mostrar, usá `grupoLabel` de `src/lib/muscles.js`.
 - Catálogo de ejercicios: API pública de wger.de, sin key, con caché en memoria por categoría. Los tests reimportan el módulo para aislar ese caché.
 - Fotos: se achican en el browser y se suben a Cloudinary (`unamas/<user_id>/`) si están `VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET`; si no, al bucket público `exercise-images/<user_id>/` de Supabase. La URL queda en `exercises.image_url` y el id en `exercises.image_public_id`. `insertExercise` reintenta sin las columnas de imagen si la migración no está aplicada.
 - Borrar una foto propia (al reemplazarla, quitarla o borrar el ejercicio) va por `removeExerciseImage(url, publicId)`: Supabase desde el navegador y Cloudinary vía `api/delete-image.js`, que valida el JWT de Supabase y la carpeta `unamas/<user_id>/` y firma el `destroy` con `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` (solo en el servidor). `npm run dev` no corre esa función: probá el borrado con `vercel dev` o en producción.
 - `gym_attendances` necesita la unique `(user_id, attendance_date)` para que funcione el `ON CONFLICT DO NOTHING` de `save_workout`.
+- Medidas corporales (brazo, piernas, cadera, cintura, cuello) van a la tabla `body_measurements` (fecha `measured_date`, tipo `measurement`, valor `value_cm`), con RLS por `auth.uid()`. Se registran y se comparan desde la pantalla de Peso contra la entrada anterior del mismo tipo.
 
 ## UI y convenciones
 
@@ -51,6 +52,7 @@ npm test          # Vitest, una sola corrida
 - Orden CSS: `styles.css` → `a11y.css` → `motion.css`; `dashboard.css` se importa desde `Dashboard.jsx` y carga después (por eso `a11y.css` usa `:root` para ganar especificidad).
 - Mobile: barra inferior `.tabbar` por debajo de `md`, menú superior desde `md`; objetivos táctiles de 44px con `pointer: coarse`.
 - Iconos: `lucide-react`, no emojis ni glifos de texto; la fuente es Chakra Petch (Google Fonts, en `index.html`).
+- La altura se ingresa desde la pantalla de Peso (guarda en `profiles.height_cm`) y el IMC se calcula con el peso actual + altura en esa misma pantalla; ya no se ingresa desde el Perfil.
 
 ## Tests
 

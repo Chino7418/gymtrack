@@ -43,6 +43,7 @@ Ejecutá las migraciones SQL en Supabase SQL Editor (o CLI):
 - `supabase/migrations/20261024000000_attendance_unique.sql`
 - `supabase/migrations/20261031000000_exercise_images.sql` (crea también el bucket `exercise-images` de Storage)
 - `supabase/migrations/20261101000000_exercise_image_public_id.sql` (columna `image_public_id` para borrar la foto en Cloudinary)
+- `supabase/migrations/20261102000000_body_measurements.sql` (tabla `body_measurements` para medidas corporales: brazo, piernas, cadera, cintura, cuello)
 
 Aplicalas en ese orden.
 

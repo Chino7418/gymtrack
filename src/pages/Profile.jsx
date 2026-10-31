@@ -6,11 +6,9 @@ import { T, C } from '../lib/schema'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg, ThemeToggle } from '../components/Layout'
 
-const categoria = (imc) => (imc < 18.5 ? 'Bajo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidad')
-
 export default function Profile() {
   const { user, signOut } = useAuth()
-  const [f, setF] = useState({ first_name: '', last_name: '', username: '', birth_date: '', height_cm: '', goal_weight_kg: '' })
+  const [f, setF] = useState({ first_name: '', last_name: '', username: '', birth_date: '', goal_weight_kg: '' })
   const [weight, setWeight] = useState(null)
   const [error, setError] = useState('')
   const [ok, setOk] = useState(false)
@@ -27,7 +25,7 @@ export default function Profile() {
       const d = p.data
       if (d) setF({
         first_name: d.first_name ?? '', last_name: d.last_name ?? '', username: d.username ?? '',
-        birth_date: d.birth_date ?? '', height_cm: d.height_cm ?? '', goal_weight_kg: d.goal_weight_kg ?? '',
+        birth_date: d.birth_date ?? '', goal_weight_kg: d.goal_weight_kg ?? '',
       })
       setWeight(w.data?.[0] ? Number(w.data[0][C.weightValue]) : null)
       setLoading(false)
@@ -38,12 +36,10 @@ export default function Profile() {
     e.preventDefault(); setError(''); setOk(false)
     if (!f.first_name.trim() || !f.last_name.trim() || !f.username.trim()) return setError('Nombre, apellido y usuario son obligatorios')
     if (f.birth_date && dayjs(f.birth_date).isAfter(dayjs(), 'day')) return setError('La fecha de nacimiento no puede ser futura')
-    if (f.height_cm !== '' && (Number(f.height_cm) <= 0 || Number(f.height_cm) >= 300)) return setError('La altura tiene que ser mayor a 0 y menor a 300 cm')
     if (f.goal_weight_kg !== '' && !(Number(f.goal_weight_kg) >= 20 && Number(f.goal_weight_kg) <= 400)) return setError('El objetivo tiene que estar entre 20 y 400 kg')
     const { error } = await supabase.from(T.profiles).update({
       first_name: f.first_name.trim(), last_name: f.last_name.trim(), username: f.username.trim(),
       birth_date: f.birth_date || null,
-      height_cm: f.height_cm === '' ? null : Number(f.height_cm),
       goal_weight_kg: f.goal_weight_kg === '' ? null : Number(f.goal_weight_kg),
       updated_at: new Date().toISOString(),
     }).eq('id', user.id)
@@ -54,8 +50,7 @@ export default function Profile() {
   if (loading) return <p>Cargando…</p>
 
   const edad = f.birth_date ? dayjs().diff(dayjs(f.birth_date), 'year') : null
-  const altura = f.height_cm !== '' ? Number(f.height_cm) : null
-  const imc = weight && altura ? weight / Math.pow(altura / 100, 2) : null
+  const peso = weight
   const objetivo = f.goal_weight_kg !== '' ? Number(f.goal_weight_kg) : null
 
   return (
@@ -76,8 +71,7 @@ export default function Profile() {
             <input id="pf-user" autoComplete="username" className="form-control mb-2" autoCapitalize="none" value={f.username} onChange={set('username')} />
             <div className="row g-2">
               <div className="col-12 col-sm-6"><label className="form-label" htmlFor="pf-birth">Fecha de nacimiento</label><input id="pf-birth" autoComplete="bday" type="date" max={dayjs().format('YYYY-MM-DD')} className="form-control mb-2" value={f.birth_date} onChange={set('birth_date')} /></div>
-              <div className="col-6 col-sm-3"><label className="form-label" htmlFor="pf-height">Altura (cm)</label><input id="pf-height" type="number" inputMode="decimal" step="any" min="0" className="form-control mb-2" value={f.height_cm} onChange={set('height_cm')} /></div>
-              <div className="col-6 col-sm-3"><label className="form-label" htmlFor="pf-goal">Objetivo (kg)</label><input id="pf-goal" type="number" inputMode="decimal" step="any" min="0" className="form-control mb-2" value={f.goal_weight_kg} onChange={set('goal_weight_kg')} /></div>
+              <div className="col-6"><label className="form-label" htmlFor="pf-goal">Objetivo (kg)</label><input id="pf-goal" type="number" inputMode="decimal" step="any" min="0" className="form-control mb-2" value={f.goal_weight_kg} onChange={set('goal_weight_kg')} /></div>
             </div>
             <button className="btn btn-primary mt-2">Guardar cambios</button>
           </form>
@@ -88,17 +82,11 @@ export default function Profile() {
             <h2 className="h6 text-muted mb-3">Tu resumen</h2>
             <div className="row g-3 text-center">
               <div className="col-6"><div className="fs-3 fw-bold">{edad ?? '—'}</div><div className="small text-muted">Edad (años)</div></div>
-              <div className="col-6"><div className="fs-3 fw-bold">{altura ?? '—'}</div><div className="small text-muted">Altura (cm)</div></div>
-              <div className="col-6"><div className="fs-3 fw-bold">{weight ?? '—'}</div><div className="small text-muted">Peso actual (kg)</div></div>
+              <div className="col-6"><div className="fs-3 fw-bold">{peso ?? '—'}</div><div className="small text-muted">Peso actual (kg)</div></div>
               <div className="col-6"><div className="fs-3 fw-bold">{objetivo ?? '—'}</div><div className="small text-muted">Objetivo (kg)</div></div>
-              <div className="col-12">
-                <div className="fs-3 fw-bold">{imc ? imc.toFixed(1) : '—'}</div>
-                <div className="small text-muted">IMC{imc ? ` · ${categoria(imc)}` : ''}</div>
-              </div>
             </div>
             <p className="small text-muted mt-3 mb-0">
-              {imc ? 'El IMC es una referencia general: no distingue masa muscular de grasa y no es un diagnóstico.'
-                : 'Cargá tu altura y registrá tu peso para ver tu IMC.'}
+              El IMC se calcula desde la pantalla de Peso, con tu altura y tu peso actual.
             </p>
           </div>
         </div>

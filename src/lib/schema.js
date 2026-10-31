@@ -9,6 +9,7 @@ export const T = {
   workoutSets: 'workout_sets',
   attendances: 'gym_attendances',
   weights: 'body_weight_entries',
+  bodyMeasurements: 'body_measurements',
 }
 export const C = {
   profileName: 'full_name',
@@ -18,4 +19,7 @@ export const C = {
   weightValue: 'weight_kg',
   weightDate: 'recorded_date',
   attendanceDate: 'attendance_date',
+  measurement: 'measurement',
+  measurementValue: 'value_cm',
+  measurementDate: 'measured_date',
 }
