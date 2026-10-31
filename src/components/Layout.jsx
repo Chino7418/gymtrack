@@ -13,10 +13,10 @@ export function Protected() {
 
 const LINKS = [
   ['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell],
-  ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound],
+  ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Mis Datos', Scale], ['/profile', 'Perfil', UserRound],
 ]
 // Barra inferior en celular. Tema y cerrar sesión están en Perfil; "Mis ejercicios" es una solapa de Entrenos.
-const TABS = [['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell], ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Peso', Scale], ['/profile', 'Perfil', UserRound]]
+const TABS = [['/', 'Inicio', House], ['/workouts', 'Entrenos', Dumbbell], ['/attendance', 'Asistencia', CalendarCheck], ['/weight', 'Mis Datos', Scale], ['/profile', 'Perfil', UserRound]]
 const TEXT_FIELD = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select'
 
 function Layout() {

@@ -52,7 +52,8 @@ npm test          # Vitest, una sola corrida
 - Orden CSS: `styles.css` → `a11y.css` → `motion.css`; `dashboard.css` se importa desde `Dashboard.jsx` y carga después (por eso `a11y.css` usa `:root` para ganar especificidad).
 - Mobile: barra inferior `.tabbar` por debajo de `md`, menú superior desde `md`; objetivos táctiles de 44px con `pointer: coarse`.
 - Iconos: `lucide-react`, no emojis ni glifos de texto; la fuente es Chakra Petch (Google Fonts, en `index.html`).
-- La altura se ingresa desde la pantalla de Peso (guarda en `profiles.height_cm`) y el IMC se calcula con el peso actual + altura en esa misma pantalla; ya no se ingresa desde el Perfil.
+- La altura se ingresa desde la pantalla Mis Datos (guarda en `profiles.height_cm`) y el IMC se calcula con el peso actual + altura en esa misma pantalla; ya no se ingresa desde el Perfil.
+- El peso objetivo (`goal_weight_kg`) también se edita desde la pantalla Mis Datos, no del Perfil.
 
 ## Tests
 

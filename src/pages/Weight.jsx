@@ -31,6 +31,7 @@ export default function Weight() {
   const [value, setValue] = useState('')
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [height, setHeight] = useState('')
+  const [goal, setGoal] = useState('')
   const [error, setError] = useState('')
   const [colors, setColors] = useState(chartColors)
   const [meas, setMeas] = useState({ measured_date: dayjs().format('YYYY-MM-DD'), brazo: '', piernas: '', cadera: '', cintura: '', cuello: '' })
@@ -47,7 +48,12 @@ export default function Weight() {
   }
   useEffect(() => { load() }, [])
   useEffect(() => {
-    supabase.from(T.profiles).select('height_cm').eq('id', user.id).maybeSingle().then(({ data }) => setHeight(data?.height_cm != null ? String(data.height_cm) : ''))
+    supabase.from(T.profiles).select('height_cm, goal_weight_kg').eq('id', user.id).maybeSingle().then(({ data }) => {
+      if (data) {
+        setHeight(data.height_cm != null ? String(data.height_cm) : '')
+        setGoal(data.goal_weight_kg != null ? String(data.goal_weight_kg) : '')
+      }
+    })
   }, [user.id])
 
   const invalid = (v, d) => {
@@ -111,6 +117,13 @@ export default function Weight() {
     setMeas({ measured_date: dayjs().format('YYYY-MM-DD'), brazo: '', piernas: '', cadera: '', cintura: '', cuello: '' })
     loadMeas()
   }
+  const saveGoal = async (e) => {
+    e.preventDefault(); setError('')
+    const n = Number(goal)
+    if (goal.trim() === '' || !(n >= 20 && n <= 400)) return setError('El objetivo tiene que estar entre 20 y 400 kg')
+    const { error: errG } = await supabase.from(T.profiles).update({ goal_weight_kg: n, updated_at: new Date().toISOString() }).eq('id', user.id)
+    if (errG) return setError(errG.message)
+  }
 
   const ultima = rows.length ? rows[rows.length - 1] : null
   const pesoActual = ultima ? Number(ultima[C.weightValue]) : null
@@ -136,7 +149,7 @@ export default function Weight() {
   const options = { responsive: true, plugins: { legend: { labels: { color: colors.text } } }, scales: { x: axis, y: axis } }
   return (
     <>
-      <h1 className="h4 mb-3">Peso corporal</h1>
+      <h1 className="h4 mb-3">Mis Datos</h1>
       <ErrorMsg error={error} />
       <form onSubmit={add} className="row g-2 mb-4">
         <div className="col-6 col-md-3"><label className="form-label" htmlFor="w-value">Peso (kg)</label><input id="w-value" type="number" inputMode="decimal" step="any" min="0" className="form-control" value={value} onChange={(e) => setValue(e.target.value)} /></div>
@@ -209,6 +222,14 @@ export default function Weight() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="card card-body p-3 mt-4" aria-labelledby="objetivo-title">
+        <h2 id="objetivo-title" className="h6 text-muted mb-3">Objetivo</h2>
+        <form onSubmit={saveGoal} className="row g-2">
+          <div className="col-6 col-md-4"><label className="form-label" htmlFor="goal">Peso objetivo (kg)</label><input id="goal" type="number" inputMode="decimal" step="any" min="20" max="400" className="form-control" value={goal} onChange={(e) => setGoal(e.target.value)} /></div>
+          <div className="col-12 col-md-2 d-flex align-items-end"><button className="btn btn-primary w-100">Guardar</button></div>
+        </form>
       </section>
     </>
   )
