@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Camera, X } from 'lucide-react'
 import { GRUPOS, grupoLabel } from '../lib/muscles'
 import { ErrorMsg } from './Layout'
+import PhotoField from './PhotoField'
 
 // Formulario corto para crear un ejercicio propio desde el buscador (nombre, grupo y foto opcional).
 // onCreate({ name, muscle_group, file }) devuelve un mensaje de error, o nada si salió bien.
@@ -14,11 +14,7 @@ export default function NewExerciseForm({ initialName = '', onCreate, onCancel }
   const [saving, setSaving] = useState(false)
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
 
-  const pickFile = (f) => {
-    if (!f) return
-    if (!f.type.startsWith('image/')) return setError('El archivo tiene que ser una imagen')
-    setFile(f); setPreview(URL.createObjectURL(f))
-  }
+  const pickFile = (f) => { setFile(f); setPreview(URL.createObjectURL(f)) }
   const submit = async (e) => {
     e.preventDefault(); setError('')
     if (!name.trim()) return setError('Poné un nombre al ejercicio')
@@ -41,15 +37,8 @@ export default function NewExerciseForm({ initialName = '', onCreate, onCancel }
         {GRUPOS.map((g) => <option key={g} value={g}>{grupoLabel(g)}</option>)}
       </select>
       <span className="form-label d-block">Foto <span className="text-muted small">(opcional)</span></span>
-      <div className="photo-field mb-3">
-        {preview
-          ? <img src={preview} alt="Vista previa de la foto del ejercicio" className="photo-preview" />
-          : <span className="photo-preview photo-empty" aria-hidden="true"><Camera size={28} /></span>}
-        <div className="d-flex flex-wrap gap-2">
-          <label className="btn btn-outline-secondary mb-0" htmlFor="nx-photo"><Camera size={18} aria-hidden="true" className="me-1" />{preview ? 'Cambiar foto' : 'Agregar foto'}</label>
-          <input id="nx-photo" type="file" accept="image/*" className="visually-hidden" onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = '' }} />
-          {preview && <button type="button" className="btn btn-outline-secondary" onClick={() => { setFile(null); setPreview(null) }}><X size={18} aria-hidden="true" className="me-1" />Quitar</button>}
-        </div>
+      <div className="mb-3">
+        <PhotoField src={preview} onPick={pickFile} onClear={() => { setFile(null); setPreview(null) }} onError={setError} />
       </div>
       <div className="d-flex flex-wrap gap-2">
         <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Crear y agregar'}</button>

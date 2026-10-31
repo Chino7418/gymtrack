@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { T } from '../lib/schema'
 import { uploadExerciseImage, removeExerciseImage, insertExercise } from '../lib/images'
-import { Camera, X } from 'lucide-react'
+import PhotoField from '../components/PhotoField'
 import { useAuth } from '../context/AuthContext'
 import { ErrorMsg } from '../components/Layout'
 import ExercisePicker, { norm } from '../components/ExercisePicker'
@@ -24,11 +24,7 @@ export default function Exercises() {
   const [preview, setPreview] = useState(null)
   const [saving, setSaving] = useState(false)
   useEffect(() => () => { if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview) }, [preview])
-  const pickFile = (f) => {
-    if (!f) return
-    if (!f.type.startsWith('image/')) return setError('El archivo tiene que ser una imagen')
-    setFile(f); setPreview(URL.createObjectURL(f))
-  }
+  const pickFile = (f) => { setFile(f); setPreview(URL.createObjectURL(f)) }
   const clearPhoto = () => { setFile(null); setPreview(null); setForm({ ...form, image_url: null }) }
 
   const load = async () => {
@@ -106,18 +102,7 @@ export default function Exercises() {
             <div className="col-12 col-md-5"><label className="form-label" htmlFor="ex-desc">Descripción <span className="text-muted small">(opcional)</span></label><input id="ex-desc" className="form-control" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="col-12">
               <span className="form-label d-block">Foto <span className="text-muted small">(opcional)</span></span>
-              <div className="photo-field">
-                {shown
-                  ? <img src={shown} alt="Vista previa de la foto del ejercicio" className="photo-preview" />
-                  : <span className="photo-preview photo-empty" aria-hidden="true"><Camera size={28} /></span>}
-                <div className="d-flex flex-wrap gap-2">
-                  <label className="btn btn-outline-secondary mb-0" htmlFor="ex-photo">
-                    <Camera size={18} aria-hidden="true" className="me-1" />{shown ? 'Cambiar foto' : 'Agregar foto'}
-                  </label>
-                  <input id="ex-photo" type="file" accept="image/*" className="visually-hidden" onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = '' }} />
-                  {shown && <button type="button" className="btn btn-outline-secondary" onClick={clearPhoto}><X size={18} aria-hidden="true" className="me-1" />Quitar</button>}
-                </div>
-              </div>
+              <PhotoField src={shown} onPick={pickFile} onClear={clearPhoto} onError={setError} />
             </div>
             <div className="col-12 d-flex gap-2">
               <button className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Agregar ejercicio'}</button>
